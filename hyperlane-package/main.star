@@ -111,9 +111,9 @@ def run(plan, args):
     for ch in chains:
         name = ch["name"]
         rpc = ch["rpc_url"]
-        yaml_content += "- name: " + name + "\\n"
-        yaml_content += "  rpc_url: " + rpc + "\\n"
-        yaml_content += "  existing_addresses: {}\\n"
+        yaml_content += "  - name: " + name + "\\n"
+        yaml_content += "    rpc_url: " + rpc + "\\n"
+        yaml_content += "    existing_addresses: {}\\n"
 
     files_art = plan.render_templates(
         config = {
