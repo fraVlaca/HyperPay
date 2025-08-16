@@ -38,27 +38,21 @@ def run(plan, args):
     rebal_cfg = _get(agents, "rebalancer", {})
     rebalancer_key = _get(rebal_cfg, "key", "")
 
-    vol_configs = plan.create_volume("configs")
-    vol_val_ckpts = plan.create_volume("validator-checkpoints")
-    vol_relayer_db = plan.create_volume("relayer-db")
-    vol_rebal_db = plan.create_volume("rebalancer-db")
+    configs_dir = Directory(persistent_key="configs")
+    val_ckpts_dir = Directory(persistent_key="validator-checkpoints")
+    relayer_db_dir = Directory(persistent_key="relayer-db")
+    rebal_db_dir = Directory(persistent_key="rebalancer-db")
 
-    cli_img = plan.build_image(
-        "hyperlane-cli-img",
-        "./src/cli",
-        {}
+    cli_img = ImageBuildSpec(
+        build_context_dir = "./src/cli",
     )
 
-    rebal_img = plan.build_image(
-        "rebalancer-img",
-        "./src/rebalancer",
-        {}
+    rebal_img = ImageBuildSpec(
+        build_context_dir = "./src/rebalancer",
     )
 
-    agent_cfg_img = plan.build_image(
-        "agent-config-gen-img",
-        "./src/tools/agent-config-gen",
-        {}
+    agent_cfg_img = ImageBuildSpec(
+        build_context_dir = "./src/tools/agent-config-gen",
     )
 
     chain_names = []
@@ -79,20 +73,14 @@ def run(plan, args):
     }
 
     plan.add_service(
-        "hyperlane-cli",
-        {
-            "image": cli_img,
-            "env_vars": cli_env,
-            "vol_mounts": {
-                vol_configs: "/configs",
+        service_name = "hyperlane-cli",
+        config = ServiceConfig(
+            image = cli_img,
+            env_vars = cli_env,
+            files = {
+                "/configs": configs_dir,
             },
-            "files": {
-                "/configs/agent-config.json": "{}"
-            },
-            "ports": {},
-            "cmd": [],
-            "entrypoint": [],
-        },
+        ),
     )
     need_core = False
     for ch in chains:
@@ -101,15 +89,19 @@ def run(plan, args):
 
     if need_core:
         plan.exec(
-            "hyperlane-cli",
-            ["sh", "-lc", "/usr/local/bin/deploy_core.sh"]
+            service_name = "hyperlane-cli",
+            recipe = ExecRecipe(
+                command = ["sh", "-lc", "/usr/local/bin/deploy_core.sh"],
+            ),
         )
 
     for wr in warp_routes:
         sym = _get(wr, "symbol", "route")
         plan.exec(
-            "hyperlane-cli",
-            ["sh", "-lc", "ROUTE_SYMBOL=" + sym + " /usr/local/bin/warp_routes.sh"]
+            service_name = "hyperlane-cli",
+            recipe = ExecRecipe(
+                command = ["sh", "-lc", "ROUTE_SYMBOL=" + sym + " /usr/local/bin/warp_routes.sh"],
+            ),
         )
 
     yaml_content = "chains:\\n"
@@ -120,17 +112,14 @@ def run(plan, args):
         yaml_content += "  rpc_url: " + rpc + "\\n"
         yaml_content += "  existing_addresses: {}\\n"
     plan.add_service(
-        "agent-config-gen",
-        {
-            "image": agent_cfg_img,
-            "vol_mounts": {
-                vol_configs: "/configs",
+        service_name = "agent-config-gen",
+        config = ServiceConfig(
+            image = agent_cfg_img,
+            files = {
+                "/configs": configs_dir,
             },
-            "files": {
-                "/configs/args.yaml": yaml_content,
-            },
-            "cmd": ["/configs/args.yaml", "/configs/agent-config.json"],
-        },
+            cmd = ["sh", "-lc", "printf '" + yaml_content + "' > /configs/args.yaml && agent-config-gen /configs/args.yaml /configs/agent-config.json"],
+        ),
     )
 
 
@@ -174,15 +163,15 @@ def run(plan, args):
             env["CHECKPOINT_SYNCER_PATH"] = "/validator-checkpoints"
 
         plan.add_service(
-            svc_name,
-            {
-                "image": agent_image,
-                "env_vars": env,
-                "vol_mounts": {
-                    vol_val_ckpts: "/validator-checkpoints",
-                    vol_configs: "/configs",
+            service_name = svc_name,
+            config = ServiceConfig(
+                image = agent_image,
+                env_vars = env,
+                files = {
+                    "/validator-checkpoints": val_ckpts_dir,
+                    "/configs": configs_dir,
                 },
-                "cmd": [
+                cmd = [
                     "sh",
                     "-lc",
                     "hyperlane-validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY" +
@@ -193,7 +182,7 @@ def run(plan, args):
                     " --checkpointSyncer.prefix ${S3_PREFIX:-}" +
                     " --checkpointSyncer.basePath ${CHECKPOINT_BASE_PATH:-}"
                 ],
-            },
+            ),
         )
 
     relayer_env = {
@@ -206,36 +195,34 @@ def run(plan, args):
     if allow_local_sync:
         relayer_cmd += " --allowLocalCheckpointSyncers true"
     plan.add_service(
-        "relayer",
-        {
-            "image": agent_image,
-            "env_vars": relayer_env,
-            "vol_mounts": {
-                vol_configs: "/configs",
-                vol_relayer_db: "/relayer-db",
-                vol_val_ckpts: "/validator-checkpoints",
+        service_name = "relayer",
+        config = ServiceConfig(
+            image = agent_image,
+            env_vars = relayer_env,
+            files = {
+                "/configs": configs_dir,
+                "/relayer-db": relayer_db_dir,
+                "/validator-checkpoints": val_ckpts_dir,
             },
-            "cmd": ["sh", "-lc", relayer_cmd],
-        },
+            cmd = ["sh", "-lc", relayer_cmd],
+        ),
     )
 
     if len(warp_routes) > 0:
         plan.add_service(
-            "rebalancer",
-            {
-                "image": rebal_img,
-                "env_vars": {
+            service_name = "rebalancer",
+            config = ServiceConfig(
+                image = rebal_img,
+                env_vars = {
                     "PORT": "8080",
                     "REBALANCER_KEY": str(rebalancer_key),
                 },
-                "vol_mounts": {
-                    vol_rebal_db: "/rebalancer-db",
-                    vol_configs: "/configs",
+                files = {
+                    "/rebalancer-db": rebal_db_dir,
+                    "/configs": configs_dir,
                 },
-                "ports": {
-                    "http": {"number": 8080, "protocol": "TCP"},
-                },
-            },
+                ports = {"http": PortSpec(number=8080)},
+            ),
         )
 
     return None
