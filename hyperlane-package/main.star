@@ -188,8 +188,7 @@ def run(plan, args):
                 cmd = [
                     "sh",
                     "-lc",
-                    "hyperlane-relayer --help >/dev/null 2>&1 || true; hyperlane-validator --help >/dev/null 2>&1 || true; " +
-                    "hyperlane-validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY" +
+                    "/app/validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY" +
                     " --checkpointSyncer.type $CHECKPOINT_SYNCER_TYPE" +
                     " --checkpointSyncer.path ${CHECKPOINT_SYNCER_PATH:-/validator-checkpoints}" +
                     " --checkpointSyncer.bucket ${S3_BUCKET:-}" +
@@ -206,7 +205,7 @@ def run(plan, args):
         "RELAY_CHAINS": relay_chains,
         "CONFIG_FILES": "/configs/agent-config.json",
     }
-    relayer_cmd = "hyperlane-relayer --relayChains $RELAY_CHAINS --defaultSigner.key $RELAYER_KEY --db /relayer-db"
+    relayer_cmd = "/app/relayer --relayChains $RELAY_CHAINS --defaultSigner.key $RELAYER_KEY --db /relayer-db"
     if allow_local_sync:
         relayer_cmd += " --allowLocalCheckpointSyncers true"
     plan.add_service(
@@ -238,6 +237,12 @@ def run(plan, args):
                 },
                 ports = {"http": PortSpec(number=8080)},
             ),
+    plan.store_service_files(
+        name = "configs-dump",
+        service_name = "hyperlane-cli",
+        src = "/configs",
+    )
+
         )
 
     return None
