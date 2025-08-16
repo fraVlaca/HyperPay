@@ -1,0 +1,112 @@
+import { useEffect, useMemo, useState } from "react";
+import { ChainKey, UnifiedRegistry } from "@config/types";
+import { loadRegistry, readLastSelection, saveLastSelection } from "@lib/registryLoader";
+import { detectRoute } from "@lib/routeDetector";
+import BridgeSelector from "@components/BridgeSelector";
+import HwrBridgePanel from "@components/HwrBridgePanel";
+import OftBridgePanel from "@components/OftBridgePanel";
+import MultiSourcePanel, { Source } from "@components/MultiSourcePanel";
+
+export default function Home() {
+  const [registry, setRegistry] = useState<UnifiedRegistry | null>(null);
+  const [selection, setSelection] = useState({
+    token: "ETH",
+    origin: "arbitrum" as ChainKey,
+    destination: "ethereum" as ChainKey,
+    amount: ""
+  });
+  const [extraSources, setExtraSources] = useState<Source[]>([]);
+
+  useEffect(() => {
+    loadRegistry().then(setRegistry);
+    const last = readLastSelection();
+    if (last) {
+      setSelection({
+        token: last.token as any,
+        origin: last.origin as ChainKey,
+        destination: last.destination as ChainKey,
+        amount: last.amount || ""
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    saveLastSelection(selection);
+  }, [selection]);
+
+  const detection = useMemo(() => {
+    if (!registry) return null;
+    const res = detectRoute(registry, {
+      token: selection.token,
+      origin: selection.origin,
+      destination: selection.destination
+    });
+    return res;
+  }, [registry, selection]);
+
+  if (!registry) {
+    return (
+      <div className="mx-auto max-w-4xl p-6">
+        <div>Loading…</div>
+      </div>
+    );
+  }
+
+  const badge =
+    detection?.bridge === "HWR"
+      ? { text: "Using Hyperlane HWR", tone: "success" as const }
+      : detection?.bridge === "OFT"
+      ? { text: "Using LayerZero OFT", tone: "warning" as const }
+      : { text: "No route available" };
+
+  return (
+    <div className="mx-auto max-w-4xl p-6 space-y-6">
+      <BridgeSelector
+        registry={registry}
+        selection={selection}
+        onChange={setSelection}
+        bridgeBadge={badge}
+        canAddSource={detection?.bridge === "HWR" && detection.supportsMultiSource === true}
+        onAddSource={() => {
+          if (detection?.bridge === "HWR" && detection.supportsMultiSource) {
+            setExtraSources([...extraSources, { chain: selection.origin, amount: "" }]);
+          }
+        }}
+      />
+
+      {detection?.bridge === "HWR" ? (
+        <div className="space-y-4">
+          {detection.supportsMultiSource ? (
+            <MultiSourcePanel
+              registry={registry}
+              token={selection.token}
+              destination={selection.destination}
+              sources={extraSources}
+              onSourcesChange={setExtraSources}
+            />
+          ) : null}
+          <HwrBridgePanel
+            registry={registry}
+            token={selection.token}
+            origin={selection.origin}
+            destination={selection.destination}
+            amount={selection.amount}
+            extraSources={extraSources}
+          />
+        </div>
+      ) : detection?.bridge === "OFT" ? (
+        <OftBridgePanel
+          registry={registry}
+          token={selection.token}
+          origin={selection.origin}
+          destination={selection.destination}
+          amount={selection.amount}
+        />
+      ) : (
+        <div className="rounded-lg border border-dashed p-6 text-sm text-gray-600">
+          No route available for this selection.
+        </div>
+      )}
+    </div>
+  );
+}

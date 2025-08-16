@@ -1,0 +1,66 @@
+{
+  "chains": {
+    "sepolia": {
+      "displayName": "Ethereum Sepolia",
+      "evmChainId": 11155111,
+      "lzEid": 40161,
+      "hyperlaneDomain": 11155111,
+      "hyperlane": { "mailbox": "0xfFAEF09B3cd11D9b20d1a19bECca54EEC2884766" }
+    },
+    "arbSepolia": {
+      "displayName": "Arbitrum Sepolia",
+      "evmChainId": 421614,
+      "lzEid": 40231,
+      "hyperlaneDomain": 421614,
+      "hyperlane": { "mailbox": "0x598facE78a4302f11E3de0bee1894Da0b2Cb71F8" }
+    },
+    "baseSepolia": {
+      "displayName": "Base Sepolia",
+      "evmChainId": 84532,
+      "lzEid": 40245,
+      "hyperlaneDomain": 84532,
+      "hyperlane": { "mailbox": "0x6966b0E55883d49BFB24539356a2f8A673E02039" }
+    }
+  },
+  "assets": {
+    "ETH": {
+      "symbol": "ETH",
+      "decimals": 18,
+      "oft": {
+        "type": "native-or-erc20",
+        "deployments": {
+          "sepolia": {
+            "contract": "",
+            "kind": "NativeOFTAdapter-or-OFTAdapter-or-OFT"
+          },
+          "arbSepolia": {
+            "contract": "",
+            "kind": "NativeOFTAdapter-or-OFTAdapter-or-OFT"
+          }
+        },
+        "pairs": [
+          { "from": "sepolia", "to": "arbSepolia" },
+          { "from": "arbSepolia", "to": "sepolia" }
+        ]
+      },
+      "hwr": {
+        "routes": [
+          {
+            "id": "ETH-HWR-2.0-TRIANGLE",
+            "topology": {
+              "sepolia": "collateral",
+              "arbSepolia": "collateral",
+              "baseSepolia": "synthetic"
+            },
+            "routers": {
+              "sepolia": "",
+              "arbSepolia": "",
+              "baseSepolia": ""
+            },
+            "owner": ""
+          }
+        ]
+      }
+    }
+  }
+}
