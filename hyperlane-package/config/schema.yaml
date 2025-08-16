@@ -17,6 +17,10 @@ properties:
   agents:
     type: object
     properties:
+      deployer:
+        type: object
+        properties:
+          key: { type: string }
       relayer:
         type: object
         properties:
@@ -41,6 +45,10 @@ properties:
                   additionalProperties: true
               required: [type, params]
           required: [chain, signing_key, checkpoint_syncer]
+      rebalancer:
+        type: object
+        properties:
+          key: { type: string }
     required: [relayer]
   warp_routes:
     type: array

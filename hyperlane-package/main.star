@@ -35,6 +35,10 @@ def run(plan, args):
     relayer_cfg = _get(agents, "relayer", {})
     relayer_key = _get(relayer_cfg, "key", "")
     allow_local_sync = _as_bool(_get(relayer_cfg, "allow_local_checkpoint_syncers", True), True)
+    deployer_cfg = _get(agents, "deployer", {})
+    deployer_key = _get(deployer_cfg, "key", "")
+    rebal_cfg = _get(agents, "rebalancer", {})
+    rebalancer_key = _get(rebal_cfg, "key", "")
 
     vol_configs = plan.create_volume("configs")
     vol_val_ckpts = plan.create_volume("validator-checkpoints")
@@ -68,6 +72,7 @@ def run(plan, args):
         "CLI_VERSION": str(cli_version),
         "REGISTRY_MODE": str(registry_mode),
         "CHAIN_NAMES": relay_chains,
+        "HYP_KEY": str(deployer_key),
     }
 
     plan.add_service(
@@ -204,6 +209,7 @@ def run(plan, args):
                 "image": rebal_img,
                 "env_vars": {
                     "PORT": "8080",
+                    "REBALANCER_KEY": str(rebalancer_key),
                 },
                 "vol_mounts": {
                     vol_rebal_db: "/rebalancer-db",

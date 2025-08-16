@@ -9,6 +9,8 @@ chains:
     deploy_core: false
 
 agents:
+  deployer:
+    key: 0xDEPLOYER_PRIVATE_KEY
   relayer:
     key: 0xRELAYER_PRIVATE_KEY
     allow_local_checkpoint_syncers: true
@@ -25,6 +27,8 @@ agents:
         type: local
         params:
           path: /validator-checkpoints
+  rebalancer:
+    key: 0xREBALANCER_PRIVATE_KEY
 
 warp_routes: []
 
