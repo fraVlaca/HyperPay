@@ -120,8 +120,10 @@ def run(plan, args):
             image = agent_cfg_img,
             files = {
                 "/configs": configs_dir,
+                "/configs/args.yaml": yaml_content,
+                "/configs/agent-config.json": "{}",
             },
-            cmd = ["sh", "-lc", "printf '" + yaml_content + "' > /configs/args.yaml && agent-config-gen /configs/args.yaml /configs/agent-config.json"],
+            cmd = ["agent-config-gen", "/configs/args.yaml", "/configs/agent-config.json"],
         ),
     )
 
@@ -177,7 +179,8 @@ def run(plan, args):
                 cmd = [
                     "sh",
                     "-lc",
-                    "hyperlane-validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY" +
+                    "relayer --help >/dev/null 2>&1 || true; validator --help >/dev/null 2>&1 || true; " +
+                    "validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY" +
                     " --checkpointSyncer.type $CHECKPOINT_SYNCER_TYPE" +
                     " --checkpointSyncer.path ${CHECKPOINT_SYNCER_PATH:-/validator-checkpoints}" +
                     " --checkpointSyncer.bucket ${S3_BUCKET:-}" +
@@ -207,7 +210,7 @@ def run(plan, args):
                 "/relayer-db": relayer_db_dir,
                 "/validator-checkpoints": val_ckpts_dir,
             },
-            cmd = ["sh", "-lc", relayer_cmd],
+            cmd = ["sh", "-lc", relayer_cmd.replace("hyperlane-relayer", "relayer")],
         ),
     )
 
