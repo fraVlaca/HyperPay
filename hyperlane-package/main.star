@@ -124,6 +124,7 @@ def run(plan, args):
         "RELAYER_KEY": relayer_key,
         "ALLOW_LOCAL": "true" if allow_local_sync else "false",
         "RELAY_CHAINS": relay_chains,
+        "CONFIG_FILES": "/configs/agent-config.json",
     }
     relayer_cmd = "hyperlane-relayer --relayChains $RELAY_CHAINS --defaultSigner.key $RELAYER_KEY --db /relayer-db"
     if allow_local_sync:
