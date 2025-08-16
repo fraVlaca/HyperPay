@@ -59,14 +59,19 @@ def run(plan, args):
     relay_chains = _join(chain_names, ",")
 
     rpc_pairs = []
+    id_pairs = []
     for ch in chains:
         rpc_pairs.append(ch["name"] + "=" + ch["rpc_url"])
+        if "chain_id" in ch:
+            id_pairs.append(ch["name"] + "=" + str(ch["chain_id"]))
     chain_rpcs = _join(rpc_pairs, ",")
+    chain_ids = _join(id_pairs, ",")
     cli_env = {
         "CLI_VERSION": str(cli_version),
         "REGISTRY_MODE": str(registry_mode),
         "CHAIN_NAMES": relay_chains,
         "CHAIN_RPCS": chain_rpcs,
+        "CHAIN_IDS": chain_ids,
         "HYP_KEY": str(deployer_key),
     }
 
@@ -123,9 +128,11 @@ def run(plan, args):
         name = "agent-config-gen",
         config = ServiceConfig(
             image = agent_cfg_img,
+            env_vars = {"DISABLE_PUBLIC_FALLBACK": "true"},
             files = {
                 "/seed": files_art,
                 "/configs": configs_dir,
+                "/configs/registry": configs_dir,
             },
             cmd = ["/seed/args.yaml", "/configs/agent-config.json"],
         ),

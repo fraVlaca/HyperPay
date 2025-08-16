@@ -25,6 +25,16 @@ if [ -n "${CHAIN_RPCS:-}" ]; then
   done
 fi
 
+declare -A IDS=()
+if [ -n "${CHAIN_IDS:-}" ]; then
+  IFS=',' read -r -a IPAIRS <<< "${CHAIN_IDS}"
+  for p in "${IPAIRS[@]}"; do
+    k="${p%%=*}"
+    v="${p#*=}"
+    IDS["$k"]="$v"
+  done
+fi
+
 IFS=',' read -r -a CHAINS <<< "${CHAIN_NAMES}"
 for ch in "${CHAINS[@]}"; do
   stamp="/configs/.done-core-${ch}"
@@ -41,8 +51,16 @@ for ch in "${CHAINS[@]}"; do
   reg_chain_dir="/configs/registry/chains/${ch}"
   mkdir -p "${reg_chain_dir}"
 
+  cid="${IDS[$ch]:-}"
+  if [ -z "$cid" ]; then
+    echo "error: CHAIN_IDS missing id for ${ch}"; exit 1
+  fi
+
   cat > "${reg_chain_dir}/metadata.yaml" <<EOF
 name: ${ch}
+protocol: ethereum
+chainId: ${cid}
+domainId: ${cid}
 rpcUrls:
   - http: ${rpc}
 EOF
@@ -50,7 +68,7 @@ EOF
   core_cfg="/configs/core-${ch}.yaml"
 
   echo "Initializing core config for ${ch}"
-  hyperlane core init -o "${core_cfg}"
+  hyperlane core init -o "${core_cfg}" -y
 
   echo "Deploying Hyperlane core to ${ch} using local registry only"
   hyperlane core deploy --chain "${ch}" -o "${core_cfg}" -r "/configs/registry" -k "$HYP_KEY" -y
