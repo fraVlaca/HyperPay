@@ -121,7 +121,7 @@ Smoke tests (manual)
 - Ensure your enclave is running and the TEST warp route is deployed.
 - Run a small transfer from ethereum to arbitrum using only your provided RPCs:
 
-  kurtosis service exec hyperlane hyperlane-cli "sh -lc 'hyperlane warp send --origin ethereum --destination arbitrum --symbol TEST --amount 0.0000001 -r /configs/registry -k \"$HYP_KEY\" -y'"
+  kurtosis service exec hyperlane hyperlane-cli "sh -lc 'hyperlane warp send --origin ethereum --destination arbitrum --warp /configs/registry/deployments/warp_routes/ETH/arbitrum-ethereum-config.yaml --amount 1 --relay -r /configs/registry -y'"
 
 - Inspect logs to confirm relay and execution on the destination:
 
@@ -135,10 +135,14 @@ Smoke tests (manual)
   - The relayer detecting the message and submitting it to the destination
 - Alternatively, you can use the helper script baked into the CLI container:
 
-  kurtosis service exec hyperlane hyperlane-cli "sh -lc 'ORIGIN=ethereum DESTINATION=arbitrum SYMBOL=TEST AMOUNT=0.0000001 /usr/local/bin/send_warp.sh'"
+  kurtosis service exec hyperlane hyperlane-cli "sh -lc 'ORIGIN=ethereum DESTINATION=arbitrum WARP_FILE=/configs/registry/deployments/warp_routes/ETH/arbitrum-ethereum-config.yaml AMOUNT=1 /usr/local/bin/send_warp.sh'"
 
-
-  - No public RPCs in logs; only your provided RPC URLs
+RPC verification
+- Ensure no public RPCs are used:
+  - List recent logs and grep for non-allowed domains; expect no matches:
+    - kurtosis service logs hyperlane relayer | egrep -i '(ankr|llamarpc|alchemy|infura|tenderly|public|blastapi)' || true
+  - Confirm only your provided RPC URLs appear:
+    - kurtosis service logs hyperlane relayer | egrep -i '(65d1c7945fa54cfe8325e61562fe97f3-rpc\.network\.bloctopus\.io|d88be824605745c0a09b1111da4727fd-rpc\.network\.bloctopus\.io)'
 
 Notes on agent-config.json generation
 - Generated inside the enclave by a one-shot container (agent-config-gen) based on your args file and any deployed addresses in /configs/addresses-*.json.

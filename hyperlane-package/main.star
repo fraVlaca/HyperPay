@@ -128,7 +128,7 @@ def run(plan, args):
         name = "agent-config-gen",
         config = ServiceConfig(
             image = agent_cfg_img,
-            env_vars = {"DISABLE_PUBLIC_FALLBACK": "true"},
+            env_vars = {"ENABLE_PUBLIC_FALLBACK": "false"},
             files = {
                 "/seed": files_art,
                 "/configs": configs_dir,

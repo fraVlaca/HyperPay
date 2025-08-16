@@ -90,7 +90,7 @@ async function build() {
       ism = deployed.ism || ism;
     }
 
-    if ((!mailbox || !igp || !validatorAnnounce || !ism) && process.env.DISABLE_PUBLIC_FALLBACK !== 'true') {
+    if ((!mailbox || !igp || !validatorAnnounce || !ism) && process.env.ENABLE_PUBLIC_FALLBACK === 'true') {
       const url = `${REG_BASE}/${ch.name}/addresses.yaml`;
       const doc = await fetchYaml(url);
       if (doc && typeof doc === 'object') {
