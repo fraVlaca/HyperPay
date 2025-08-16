@@ -129,24 +129,45 @@ NODE
 fi
 
 mkdir -p /tmp/txs
-STRATEGY_FILE="/tmp/strategy.yaml"
-: > "$STRATEGY_FILE"
 
+# Create a combined transaction file for all chains
+combined_tx_file="/tmp/txs/all-chains.json"
+echo "{" > "$combined_tx_file"
+first=true
+
+# Process each chain's liquidity
 while read -r chain addr amount; do
   if [ -z "$chain" ] || [ -z "$addr" ] || [ -z "$amount" ]; then
     continue
   fi
-  tx_file="/tmp/txs/${chain}.json"
-  printf '[{"to":"%s","value":"%s"}]\n' "$addr" "$amount" > "$tx_file"
-  {
-    echo "${chain}:"
-    echo "  type: FILE"
-    echo "  filepath: ${tx_file}"
-  } >> "$STRATEGY_FILE"
+  
+  echo "Preparing liquidity for $chain: $amount to $addr"
+  
+  # Add comma if not first entry
+  if [ "$first" = true ]; then
+    first=false
+  else
+    echo "," >> "$combined_tx_file"
+  fi
+  
+  # Add chain transaction to combined file
+  cat >> "$combined_tx_file" <<EOF
+  "${chain}": [
+    {
+      "to": "${addr}",
+      "value": "${amount}"
+    }
+  ]
+EOF
+    
 done < /tmp/seed-plan.txt
 
+# Close the JSON object
+echo "}" >> "$combined_tx_file"
+
+# Submit all transactions at once
+echo "Submitting liquidity transactions..."
 hyperlane submit \
-  --transactions "/tmp/txs" \
-  --strategy "$STRATEGY_FILE" \
+  --transactions "$combined_tx_file" \
   -r "$REGISTRY_DIR" \
-  -y
+  -y || echo "Warning: Failed to seed liquidity"
