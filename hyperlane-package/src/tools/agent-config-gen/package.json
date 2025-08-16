@@ -1,0 +1,12 @@
+{
+  "name": "agent-config-gen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "agent-config-gen": "index.js"
+  },
+  "dependencies": {
+    "yaml": "^2.4.5"
+  }
+}

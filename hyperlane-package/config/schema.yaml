@@ -1,0 +1,93 @@
+type: object
+properties:
+  chains:
+    type: array
+    minItems: 2
+    items:
+      type: object
+      properties:
+        name: { type: string }
+        rpc_url: { type: string }
+        chain_id: { type: integer }
+        deploy_core: { type: boolean }
+        existing_addresses:
+          type: object
+          additionalProperties: true
+      required: [name, rpc_url, deploy_core]
+  agents:
+    type: object
+    properties:
+      relayer:
+        type: object
+        properties:
+          key: { type: string }
+          allow_local_checkpoint_syncers: { type: boolean }
+        required: [key]
+      validators:
+        type: array
+        items:
+          type: object
+          properties:
+            chain: { type: string }
+            signing_key: { type: string }
+            checkpoint_syncer:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [local, s3, gcs]
+                params:
+                  type: object
+                  additionalProperties: true
+              required: [type, params]
+          required: [chain, signing_key, checkpoint_syncer]
+    required: [relayer]
+  warp_routes:
+    type: array
+    items:
+      type: object
+      properties:
+        symbol: { type: string }
+        decimals: { type: integer }
+        topology:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [collateral, synthetic]
+        token_addresses:
+          type: object
+          additionalProperties: { type: string }
+        owner: { type: string }
+        rebalancer:
+          type: object
+          properties:
+            address: { type: string }
+            policy:
+              type: object
+              properties:
+                low_watermark_pct: { type: number }
+                high_watermark_pct: { type: number }
+                min_rebalance_amount: { type: string }
+            adapters:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [cctp, oft]
+                  params:
+                    type: object
+                    additionalProperties: true
+                required: [type]
+          required: [address]
+      required: [symbol, decimals, topology, owner]
+  global:
+    type: object
+    properties:
+      registry_mode:
+        type: string
+        enum: [local, public]
+      agent_image_tag: { type: string }
+      cli_version: { type: string }
+required: [chains, agents, global]

@@ -1,0 +1,34 @@
+chains:
+  - name: ethereum
+    rpc_url: https://eth-mainnet.example
+    chain_id: 1
+    deploy_core: false
+  - name: arbitrum
+    rpc_url: https://arb1.arbitrum.io/rpc
+    chain_id: 42161
+    deploy_core: false
+
+agents:
+  relayer:
+    key: 0xRELAYER_PRIVATE_KEY
+    allow_local_checkpoint_syncers: true
+  validators:
+    - chain: ethereum
+      signing_key: 0xVALIDATOR_PK_ETH
+      checkpoint_syncer:
+        type: local
+        params:
+          path: /validator-checkpoints
+    - chain: arbitrum
+      signing_key: 0xVALIDATOR_PK_ARB
+      checkpoint_syncer:
+        type: local
+        params:
+          path: /validator-checkpoints
+
+warp_routes: []
+
+global:
+  registry_mode: public
+  agent_image_tag: agents-v1.4.0
+  cli_version: latest
