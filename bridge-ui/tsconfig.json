@@ -18,7 +18,8 @@
       "@components/*": ["src/components/*"],
       "@config/*": ["src/config/*"],
       "@lib/*": ["src/lib/*"],
-      "@styles/*": ["src/styles/*"]
+      "@styles/*": ["src/styles/*"],
+      "@vendor/*": ["src/vendor/*"]
     },
     "types": ["vitest/globals", "node"],
     "incremental": true
