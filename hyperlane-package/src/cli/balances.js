@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fs = require('fs');
-const path = require('path');
 const { ethers } = require('ethers');
+const yaml = require('yaml');
 
 function usage() {
   console.log('Usage: balances.js <artifactPath> <rpcEth> <rpcArb> [deployerPrivKey]');
@@ -24,29 +24,39 @@ if (!priv) {
   process.exit(3);
 }
 
-const txt = fs.readFileSync(artifactPath, 'utf8');
-function pickTokenAddr(chain) {
-  const re = new RegExp(`chainName:\\s*${chain}[\\s\\S]*?addressOrDenom:\\s*"(0x[0-9a-fA-F]{40})"`, 'm');
-  const m = re.exec(txt);
-  return m ? m[1] : null;
+function pickTokenAddrFromYaml(doc, chain) {
+  if (!doc || !Array.isArray(doc.tokens)) return null;
+  for (const t of doc.tokens) {
+    if ((t.chainName || '').toLowerCase() === chain.toLowerCase()) {
+      return t.addressOrDenom || null;
+    }
+  }
+  return null;
 }
 
 (async () => {
-  const ethToken = pickTokenAddr('ethereum');
-  const arbToken = pickTokenAddr('arbitrum');
+  const txt = fs.readFileSync(artifactPath, 'utf8');
+  const doc = yaml.parse(txt);
+
+  const ethToken = pickTokenAddrFromYaml(doc, 'ethereum');
+  const arbToken = pickTokenAddrFromYaml(doc, 'arbitrum');
   if (!ethToken || !arbToken) {
     console.error('Could not parse token addresses from artifact');
     process.exit(4);
   }
-  const deployer = new ethers.Wallet(priv).address;
+
+  const wallet = new ethers.Wallet(priv);
+  const deployer = wallet.address;
   const abi = ['function balanceOf(address) view returns (uint256)'];
 
   const pEth = new ethers.JsonRpcProvider(rpcEth);
   const pArb = new ethers.JsonRpcProvider(rpcArb);
   const cEth = new ethers.Contract(ethToken, abi, pEth);
   const cArb = new ethers.Contract(arbToken, abi, pArb);
-  const bEth = await cEth.balanceOf(deployer);
-  const bArb = await cArb.balanceOf(deployer);
+  const [bEth, bArb] = await Promise.all([
+    cEth.balanceOf(deployer),
+    cArb.balanceOf(deployer),
+  ]);
 
   const out = {
     ethToken,
