@@ -3,6 +3,7 @@ import { writeFileSync, mkdtempSync, existsSync, mkdirSync, readFileSync } from 
 import { tmpdir } from "os";
 import { join, resolve } from "path";
 import { spawn } from "child_process";
+import YAML from "yaml";
 
 type ChainKey = string;
 
@@ -35,49 +36,30 @@ function readJson(p: string) {
   return JSON.parse(raw);
 }
 
-function toYaml(obj: any, indent = 0): string {
-  const pad = "  ".repeat(indent);
-  if (obj === null || obj === undefined) return "null";
-  if (typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean") return String(obj);
-  if (Array.isArray(obj)) {
-    if (obj.length === 0) return "[]";
-    return obj.map((v) => `${pad}- ${toYaml(v, indent + 1).replace(/^\s+/, "")}`).join("\n");
-    }
-  const keys = Object.keys(obj);
-  return keys
-    .map((k) => {
-      const v = (obj as any)[k];
-      const valYaml = toYaml(v, indent + 1);
-      if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-        return `${pad}${k}:\n${valYaml}`;
-      }
-      return `${pad}${k}: ${valYaml}`;
-    })
-    .join("\n");
-}
-
 function buildWarpYaml(input: Input) {
   const chains = input.collaterals.concat([input.synthetic]);
   const chainEntries = chains.map((ck) => {
     const c = input.chains[ck];
+    const isSynthetic = ck === input.synthetic;
+    const token: any = {
+      name: input.token.symbol,
+      symbol: input.token.symbol,
+      decimals: input.token.decimals,
+    };
+    if (!isSynthetic && (c as any)?.token) {
+      token.address = (c as any).token;
+    }
     return {
       chainName: ck,
       domain: c.hyperlaneDomain,
-      type:
-        ck === input.synthetic
-          ? "EvmHypSynthetic"
-          : "EvmHypCollateral",
-      token: {
-        name: input.token.symbol,
-        symbol: input.token.symbol,
-        decimals: input.token.decimals
-      }
+      type: isSynthetic ? "EvmHypSynthetic" : "EvmHypCollateral",
+      token,
     };
   });
 
   const connections = input.collaterals.map((ck) => ({
     from: ck,
-    to: input.synthetic
+    to: input.synthetic,
   }));
 
   const root: any = {
@@ -85,14 +67,14 @@ function buildWarpYaml(input: Input) {
     decimals: input.token.decimals,
     type: "multiCollateral",
     chains: chainEntries,
-    connections
+    connections,
   };
 
   if (input.owner) {
     root.owner = input.owner;
   }
 
-  return toYaml(root);
+  return YAML.stringify(root);
 }
 
 function ensureDir(p: string) {
@@ -105,7 +87,7 @@ function writeArtifact(input: Input, outDir: string) {
     topology: Object.fromEntries(
       [...input.collaterals, input.synthetic].map((ck) => [
         ck,
-        ck === input.synthetic ? "synthetic" : "collateral"
+        ck === input.synthetic ? "synthetic" : "collateral",
       ])
     ),
     routers:
@@ -115,11 +97,16 @@ function writeArtifact(input: Input, outDir: string) {
       ),
     domains: Object.fromEntries(
       Object.entries(input.chains).map(([k, v]) => [k, v.hyperlaneDomain])
-    )
+    ),
   };
   const ap =
     input.artifactOut ||
-    resolve(outDir, `hwr.${input.token.symbol.toLowerCase()}.${input.collaterals.join("-")}-to-${input.synthetic}.json`);
+    resolve(
+      outDir,
+      `hwr.${input.token.symbol.toLowerCase()}.${input.collaterals.join(
+        "-"
+      )}-to-${input.synthetic}.json`
+    );
   ensureDir(resolve(outDir));
   writeFileSync(ap, JSON.stringify(artifact, null, 2));
   console.log("Wrote HWR artifact:", ap);
@@ -128,7 +115,9 @@ function writeArtifact(input: Input, outDir: string) {
 async function run() {
   const argFileIdx = process.argv.findIndex((a) => a === "--config");
   if (argFileIdx === -1 || !process.argv[argFileIdx + 1]) {
-    console.error("Usage: pnpm --filter hyperlane-tools run extend -- --config ./path/to/input.json [--deploy]");
+    console.error(
+      "Usage: pnpm --filter hyperlane-tools run extend -- --config ./path/to/input.json [--deploy]"
+    );
     process.exit(1);
   }
   const inputPath = process.argv[argFileIdx + 1];
@@ -138,7 +127,9 @@ async function run() {
 
   const yaml = buildWarpYaml(input);
 
-  const outDir = input.configOut ? resolve(input.configOut) : mkdtempSync(join(tmpdir(), "hwr-"));
+  const outDir = input.configOut
+    ? resolve(input.configOut)
+    : mkdtempSync(join(tmpdir(), "hwr-"));
   ensureDir(outDir);
   const yamlPath = join(outDir, "warp-route-deployment.yaml");
   writeFileSync(yamlPath, yaml, "utf-8");
