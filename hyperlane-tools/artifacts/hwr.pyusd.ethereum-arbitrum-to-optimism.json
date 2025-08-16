@@ -1,0 +1,18 @@
+{
+  "asset": "PYUSD",
+  "topology": {
+    "ethereum": "collateral",
+    "arbitrum": "collateral",
+    "optimism": "synthetic"
+  },
+  "routers": {
+    "ethereum": "",
+    "arbitrum": "",
+    "optimism": ""
+  },
+  "domains": {
+    "ethereum": 1,
+    "arbitrum": 42161,
+    "optimism": 10
+  }
+}
