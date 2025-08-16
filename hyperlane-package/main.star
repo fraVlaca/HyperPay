@@ -184,9 +184,10 @@ def run(plan, args):
             name = svc_name,
             config = ServiceConfig(
                 image = agent_image,
-                env_vars = env,
+                env_vars = dict(env, CONFIG_FILES="/configs/agent-config.json"),
                 files = {
                     "/validator-checkpoints": val_ckpts_dir,
+                    "/configs": configs_dir,
                 },
                 cmd = [
                     "sh",
@@ -207,6 +208,7 @@ def run(plan, args):
         "RELAYER_KEY": relayer_key,
         "ALLOW_LOCAL": "true" if allow_local_sync else "false",
         "RELAY_CHAINS": relay_chains,
+        "CONFIG_FILES": "/configs/agent-config.json",
     }
     relayer_cmd = "/app/relayer --relayChains $RELAY_CHAINS --defaultSigner.key $RELAYER_KEY --db /relayer-db"
     for ch in chains:
@@ -221,6 +223,7 @@ def run(plan, args):
             files = {
                 "/relayer-db": relayer_db_dir,
                 "/validator-checkpoints": val_ckpts_dir,
+                "/configs": configs_dir,
             },
             cmd = ["sh", "-lc", relayer_cmd],
         ),
