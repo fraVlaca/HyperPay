@@ -46,7 +46,7 @@ function buildWarpYaml(input: Input) {
       symbol: input.token.symbol,
       decimals: input.token.decimals,
     };
-    if (!isSynthetic && (c as any)?.token) {
+    if ((c as any)?.token) {
       token.address = (c as any).token;
     }
     return {

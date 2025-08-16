@@ -1,0 +1,29 @@
+{
+  "token": { "symbol": "PYUSD", "decimals": 6 },
+  "collaterals": ["ethereum", "arbitrum"],
+  "synthetic": "optimism",
+  "chains": {
+    "ethereum": {
+      "evmChainId": 1,
+      "hyperlaneDomain": 1,
+      "rpcUrl": "https://eth-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk",
+      "token": "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8"
+    },
+    "arbitrum": {
+      "evmChainId": 42161,
+      "hyperlaneDomain": 42161,
+      "rpcUrl": "https://arb-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk",
+      "token": "0x46850aD61C2B7d64d08c9C754F45254596696984"
+    },
+    "optimism": {
+      "evmChainId": 10,
+      "hyperlaneDomain": 10,
+      "rpcUrl": "https://opt-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk",
+      "token": ""
+    }
+  },
+  "owner": "",
+  "deploy": false,
+  "configOut": "./tmp-hwr",
+  "artifactOut": "./artifacts/hwr.pyusd.ethereum-arbitrum-to-optimism.json"
+}
