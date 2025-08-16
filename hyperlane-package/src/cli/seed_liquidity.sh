@@ -6,7 +6,7 @@ if ! command -v hyperlane >/dev/null 2>&1; then
 fi
 
 REGISTRY_DIR="${REGISTRY_DIR:-/configs/registry}"
-WARP_FILE="${WARP_FILE:-/configs/registry/deployments/warp_routes/ETH/arbitrum-ethereum-config.yaml}"
+WARP_FILE="${WARP_FILE:-}"
 INITIAL_LIQUIDITY="${INITIAL_LIQUIDITY:-}"
 SYMBOL="${SYMBOL:-}"
 
@@ -37,12 +37,22 @@ try {
 } catch {}
 NODE
 )"
+if [ -z "$WARP_FILE" ]; then
+  CANDIDATE="$(ls -1 "$REGISTRY_DIR"/deployments/warp_routes/*/*.yaml 2>/dev/null | head -n1 || true)"
+  if [ -n "$CANDIDATE" ] && [ -f "$CANDIDATE" ]; then
+    WARP_FILE="$CANDIDATE"
+  fi
+fi
+
 fi
 
 TMP_OUT="/tmp/warp-derived.json"
 READ_RC=1
 set +e
-if [ -n "$SYMBOL" ]; then
+if [ -n "$WARP_FILE" ] && [ -f "$WARP_FILE" ]; then
+  hyperlane warp read --warp "$WARP_FILE" -r "$REGISTRY_DIR" -y > "$TMP_OUT"
+  READ_RC=$?
+elif [ -n "$SYMBOL" ]; then
   hyperlane warp read --symbol "$SYMBOL" -r "$REGISTRY_DIR" -y > "$TMP_OUT"
   READ_RC=$?
 else

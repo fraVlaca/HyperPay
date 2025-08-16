@@ -118,7 +118,7 @@ def run(plan, args):
                 plan.exec(
                     service_name = "hyperlane-cli",
                     recipe = ExecRecipe(
-                        command = ["sh", "-lc", "SYMBOL=" + sym + " REGISTRY_DIR=/configs/registry INITIAL_LIQUIDITY=\"" + liq_str + "\" /usr/local/bin/seed_liquidity.sh"],
+                        command = ["sh", "-lc", "REGISTRY_DIR=/configs/registry INITIAL_LIQUIDITY=\"" + liq_str + "\" /usr/local/bin/seed_liquidity.sh"],
                     ),
                 )
 
