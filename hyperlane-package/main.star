@@ -87,7 +87,7 @@ def run(plan, args):
                 vol_configs: "/configs",
             },
             "files": {
-                "/configs/agent-config.json": "{\\n  \\"chains\\": {}\\n}"
+                "/configs/agent-config.json": "{}"
             },
             "ports": {},
             "cmd": [],
