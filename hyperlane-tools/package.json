@@ -7,10 +7,12 @@
     "build": "tsc -p tsconfig.json",
     "extend": "tsx src/extend-multicollateral.ts",
     "deploy:oft:native": "tsx src/deploy-oft-native.ts",
+    "deploy:oft:erc20": "tsx src/deploy-oft-erc20.ts",
     "registry:build": "tsx src/build-registry.ts"
   },
   "dependencies": {
-    "viem": "^2.21.15"
+    "viem": "^2.21.15",
+    "yaml": "^2.5.1"
   },
   "devDependencies": {
     "tsx": "^4.15.7",

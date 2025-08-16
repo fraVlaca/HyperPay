@@ -1,0 +1,14 @@
+{
+  "token": { "symbol": "WETH", "decimals": 18 },
+  "erc20": {
+    "sepolia": "0xFfF9976782d46CC05630D1f6eBAb18b2324d6B14",
+    "arbSepolia": "0x0000000000000000000000000000000000000000"
+  },
+  "chains": {
+    "sepolia": { "rpcUrl": "https://ethereum-sepolia-rpc.publicnode.com", "eid": 40161 },
+    "arbSepolia": { "rpcUrl": "https://api.zan.top/arb-sepolia", "eid": 40231 }
+  },
+  "deployer": { "privateKey": "" },
+  "out": "./artifacts/oft-erc20.weth.sepolia-arbSepolia.json",
+  "dryRun": false
+}
