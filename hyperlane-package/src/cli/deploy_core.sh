@@ -5,7 +5,7 @@ if ! command -v hyperlane >/dev/null 2>&1; then
   npm i -g @hyperlane-xyz/cli@${CLI_VERSION:-latest}
 fi
 
-mkdir -p /configs
+mkdir -p /configs /configs/registry/chains
 
 if [ -z "${CHAIN_NAMES:-}" ]; then
   echo "CHAIN_NAMES not set"; exit 1
@@ -38,10 +38,26 @@ for ch in "${CHAINS[@]}"; do
     echo "error: no RPC provided for chain ${ch}"; exit 1
   fi
 
-  echo "Deploying Hyperlane core to ${ch} (registry_mode=${REGISTRY_MODE:-local})"
-  hyperlane core init --chain "${ch}" --registry "${REGISTRY_MODE:-local}"
-  hyperlane core deploy --chain "${ch}" --key "$HYP_KEY" --rpcUrl "$rpc"
-  hyperlane core addresses --chain "${ch}" --rpcUrl "$rpc" > "/configs/addresses-${ch}.json" || true
+  reg_chain_dir="/configs/registry/chains/${ch}"
+  mkdir -p "${reg_chain_dir}"
+
+  cat > "${reg_chain_dir}/metadata.yaml" <<EOF
+name: ${ch}
+rpcUrls:
+  - http: ${rpc}
+EOF
+
+  core_cfg="/configs/core-${ch}.yaml"
+
+  echo "Initializing core config for ${ch}"
+  hyperlane core init -o "${core_cfg}"
+
+  echo "Deploying Hyperlane core to ${ch} using local registry only"
+  hyperlane core deploy --chain "${ch}" -o "${core_cfg}" -r "/configs/registry" -k "$HYP_KEY" -y
+
+  if [ -f "/home/ubuntu/.hyperlane/chains/${ch}/addresses.yaml" ]; then
+    cp "/home/ubuntu/.hyperlane/chains/${ch}/addresses.yaml" "${reg_chain_dir}/addresses.yaml" || true
+  fi
 
   touch "${stamp}"
 done

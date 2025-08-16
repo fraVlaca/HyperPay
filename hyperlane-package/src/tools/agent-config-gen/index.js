@@ -60,6 +60,17 @@ function readCoreAddressesFromConfigsDir(chainName) {
       return { mailbox, igp, validatorAnnounce, ism };
     }
   } catch {}
+  try {
+    const p2 = path.resolve('/configs/registry/chains', chainName, 'addresses.yaml');
+    if (fs.existsSync(p2)) {
+      const y = YAML.parse(fs.readFileSync(p2, 'utf8'));
+      const mailbox = y.mailbox || '';
+      const igp = y.interchainGasPaymaster || '';
+      const validatorAnnounce = y.validatorAnnounce || '';
+      const ism = y.interchainSecurityModule || '';
+      return { mailbox, igp, validatorAnnounce, ism };
+    }
+  } catch {}
   return null;
 }
 
@@ -79,7 +90,7 @@ async function build() {
       ism = deployed.ism || ism;
     }
 
-    if (!mailbox || !igp || !validatorAnnounce || !ism) {
+    if ((!mailbox || !igp || !validatorAnnounce || !ism) && process.env.DISABLE_PUBLIC_FALLBACK !== 'true') {
       const url = `${REG_BASE}/${ch.name}/addresses.yaml`;
       const doc = await fetchYaml(url);
       if (doc && typeof doc === 'object') {
