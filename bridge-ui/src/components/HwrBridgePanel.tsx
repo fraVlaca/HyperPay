@@ -1,5 +1,7 @@
 import { ChainKey, UnifiedRegistry } from "@config/types";
 import { Source } from "./MultiSourcePanel";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import HwrTransferForm from "./hwr/HwrTransferForm";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -11,30 +13,29 @@ type Props = {
 };
 
 export default function HwrBridgePanel({
+  registry,
   token,
   origin,
   destination,
   amount,
   extraSources
 }: Props) {
-  function submit() {
-    alert(
-      `HWR transfer\nToken: ${token}\nFrom: ${origin}\nTo: ${destination}\nAmount: ${amount}\nExtra: ${extraSources
-        .map((s) => `${s.chain}:${s.amount}`)
-        .join(", ")}`
-    );
-  }
-
   return (
     <div className="rounded-lg border border-gray-200 p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-medium">Hyperlane HWR</h3>
-        <button
-          onClick={submit}
-          className="rounded-md bg-gray-900 px-3 py-2 text-sm text-white"
-        >
-          Bridge
-        </button>
+        <ConnectButton />
+      </div>
+
+      <div className="mt-4">
+        <HwrTransferForm
+          registry={registry}
+          token={token}
+          origin={origin}
+          destination={destination}
+          amount={amount}
+          extraSources={extraSources}
+        />
       </div>
     </div>
   );
