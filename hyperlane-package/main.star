@@ -61,6 +61,7 @@ def run(plan, args):
     cli_env = {
         "CLI_VERSION": str(cli_version),
         "REGISTRY_MODE": str(registry_mode),
+        "CHAIN_NAMES": relay_chains,
     }
 
     plan.add_service(
