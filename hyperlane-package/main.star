@@ -76,7 +76,7 @@ def run(plan, args):
     }
 
     plan.add_service(
-        service_name = "hyperlane-cli",
+        name = "hyperlane-cli",
         config = ServiceConfig(
             image = cli_img,
             env_vars = cli_env,
@@ -115,7 +115,7 @@ def run(plan, args):
         yaml_content += "  rpc_url: " + rpc + "\\n"
         yaml_content += "  existing_addresses: {}\\n"
     plan.add_service(
-        service_name = "agent-config-gen",
+        name = "agent-config-gen",
         config = ServiceConfig(
             image = agent_cfg_img,
             files = {
@@ -166,7 +166,7 @@ def run(plan, args):
             env["CHECKPOINT_SYNCER_PATH"] = "/validator-checkpoints"
 
         plan.add_service(
-            service_name = svc_name,
+            name = svc_name,
             config = ServiceConfig(
                 image = agent_image,
                 env_vars = env,
@@ -198,7 +198,7 @@ def run(plan, args):
     if allow_local_sync:
         relayer_cmd += " --allowLocalCheckpointSyncers true"
     plan.add_service(
-        service_name = "relayer",
+        name = "relayer",
         config = ServiceConfig(
             image = agent_image,
             env_vars = relayer_env,
@@ -213,7 +213,7 @@ def run(plan, args):
 
     if len(warp_routes) > 0:
         plan.add_service(
-            service_name = "rebalancer",
+            name = "rebalancer",
             config = ServiceConfig(
                 image = rebal_img,
                 env_vars = {
