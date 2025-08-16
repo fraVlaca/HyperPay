@@ -53,6 +53,12 @@ def run(plan, args):
         {}
     )
 
+    agent_cfg_img = plan.build_image(
+        "agent-config-gen-img",
+        "./src/tools/agent-config-gen",
+        {}
+    )
+
     chain_names = []
     for ch in chains:
         chain_names.append(ch["name"])
