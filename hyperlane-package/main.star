@@ -132,7 +132,7 @@ def run(plan, args):
                 "/seed": files_art,
                 "/configs": configs_dir,
             },
-            cmd = ["sh", "-lc", "cp /seed/args.yaml /configs/args.yaml && cp /seed/agent-config.json /configs/agent-config.json && agent-config-gen /configs/args.yaml /configs/agent-config.json"],
+            cmd = ["/seed/args.yaml", "/configs/agent-config.json"],
         ),
     )
 
