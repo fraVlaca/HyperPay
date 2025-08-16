@@ -117,8 +117,8 @@ def run(plan, args):
 
     files_art = plan.render_templates(
         config = {
-            "/configs/args.yaml": struct(template=yaml_content, data=struct()),
-            "/configs/agent-config.json": struct(template="{}", data=struct()),
+            "args.yaml": struct(template=yaml_content, data=struct()),
+            "agent-config.json": struct(template="{}", data=struct()),
         },
         name = "agent-config-seed",
         description = "seed args.yaml and agent-config.json",
@@ -129,10 +129,10 @@ def run(plan, args):
         config = ServiceConfig(
             image = agent_cfg_img,
             files = {
-                "/": files_art,
+                "/seed": files_art,
                 "/configs": configs_dir,
             },
-            cmd = ["agent-config-gen", "/configs/args.yaml", "/configs/agent-config.json"],
+            cmd = ["sh", "-lc", "cp /seed/args.yaml /configs/args.yaml && cp /seed/agent-config.json /configs/agent-config.json && agent-config-gen /configs/args.yaml /configs/agent-config.json"],
         ),
     )
 
