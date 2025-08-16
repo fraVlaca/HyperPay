@@ -86,6 +86,32 @@ def run(plan, args):
             "entrypoint": [],
         },
     )
+    chain_obj_strs = []
+    for ch in chains:
+        name = ch["name"]
+        rpc = ch["rpc_url"]
+        existing = _get(ch, "existing_addresses", {})
+        mailbox = _get(existing, "mailbox", "")
+        igp = _get(existing, "igp", "")
+        va = _get(existing, "validatorAnnounce", "")
+        ism = _get(existing, "ism", "")
+        chain_json = "{\\"name\\": \\"" + name + "\\", \\"rpc_url\\": \\"" + rpc + "\\", \\"existing_addresses\\": {\\"mailbox\\": \\"" + mailbox + "\\", \\"igp\\": \\"" + igp + "\\", \\"validatorAnnounce\\": \\"" + va + "\\", \\"ism\\": \\"" + ism + "\\"}}"
+        chain_obj_strs.append(chain_json)
+    args_json = "{\\n  \\"chains\\": [" + _join(chain_obj_strs, ",") + "]\\n}"
+    plan.add_service(
+        "agent-config-gen",
+        {
+            "image": agent_cfg_img,
+            "vol_mounts": {
+                vol_configs: "/configs",
+            },
+            "files": {
+                "/configs/args.json": args_json,
+            },
+            "cmd": ["/configs/args.json", "/configs/agent-config.json"],
+        },
+    )
+
 
     agent_image = "gcr.io/abacus-labs-dev/hyperlane-agent:" + str(agent_tag)
 
