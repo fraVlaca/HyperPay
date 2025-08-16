@@ -52,6 +52,9 @@ function main() {
         bridgeType: "OFT",
         oft: {
           token: a.asset,
+          decimals: a.decimals || 18,
+          mode: a.type || "OFT",
+          erc20: a.erc20 || undefined,
           oft: {
             ...(a.deployments || {})
           },
