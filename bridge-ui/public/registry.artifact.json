@@ -1,0 +1,42 @@
+{
+  "chains": {
+    "ethereum": { "evmChainId": 1, "lzEid": 30101, "hyperlaneDomain": 1 },
+    "optimism": { "evmChainId": 10, "lzEid": 30111, "hyperlaneDomain": 10 },
+    "arbitrum": { "evmChainId": 42161, "lzEid": 30110, "hyperlaneDomain": 42161 }
+  },
+  "tokens": [
+    { "symbol": "PYUSD", "decimals": 6 }
+  ],
+  "routes": [
+    {
+      "bridgeType": "HWR",
+      "hwr": {
+        "token": "PYUSD",
+        "supportsMultiSource": true,
+        "routers": {
+          "ethereum": "0x76886b63257244CA00dAdE349d8Aa92b0a541fd9",
+          "arbitrum": "0xDe95b0d8C5a1Cd9939A63A51ebf07732F1aCc92D",
+          "optimism": "0x2A0B01E072b3d68249A2b3666cB90585eC4bd79e"
+        },
+        "edges": [
+          { "from": "ethereum", "to": "optimism" },
+          { "from": "arbitrum", "to": "optimism" }
+        ]
+      }
+    },
+    {
+      "bridgeType": "OFT",
+      "oft": {
+        "token": "PYUSD",
+        "oft": {
+          "ethereum": "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8",
+          "arbitrum": "0x46850aD61C2B7d64d08c9C754F45254596696984"
+        },
+        "endpointIds": {
+          "ethereum": 30101,
+          "arbitrum": 30110
+        }
+      }
+    }
+  ]
+}

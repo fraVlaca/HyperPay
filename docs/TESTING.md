@@ -41,3 +41,6 @@ Routers (deployed via Hyperlane CLI; also in artifacts/hwr.pyusd.ethereum-arbitr
 - Ethereum (EvmHypCollateral): 0x76886b63257244CA00dAdE349d8Aa92b0a541fd9
 - Arbitrum (EvmHypCollateral): 0xDe95b0d8C5a1Cd9939A63A51ebf07732F1aCc92D
 - Optimism (EvmHypSynthetic): 0x2A0B01E072b3d68249A2b3666cB90585eC4bd79e
+ARB → OP (Hyperlane lock/mint)
+- Amount: 0.60 PYUSD (600000 with 6 decimals)
+- Result: Failed preflight with "Insufficient balance" on ARB PYUSD; skipping until ARB wallet has PYUSD balance
