@@ -77,7 +77,16 @@ export default function Home() {
       <BridgeSelector
         registry={registry}
         selection={selection}
-        onChange={setSelection}
+        onChange={(next) =>
+          setSelection((prev) => ({
+            token: next.token || prev.token,
+            origin: (next.origin && next.origin.length > 0 ? next.origin : prev.origin) as ChainKey,
+            destination: (next.destination && next.destination.length > 0
+              ? next.destination
+              : prev.destination) as ChainKey,
+            amount: typeof next.amount === "string" ? next.amount : prev.amount
+          }))
+        }
         bridgeBadge={badge}
         canAddSource={detection?.bridge === "HWR" && detection.supportsMultiSource === true}
         onAddSource={() => {

@@ -3,6 +3,10 @@ import { ChainLogo } from "@hyperlane-xyz/widgets";
 import { ChainKey, UnifiedRegistry } from "@config/types";
 import { Source } from "../MultiSourcePanel";
 import { isEdgeAvailable } from "@lib/hwrAdapter";
+import { useAccount, useWalletClient } from "wagmi";
+import { toast } from "react-toastify";
+import { sendHwr } from "@lib/hwrSend";
+import { getDevWalletClient } from "@lib/wallet";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -22,6 +26,9 @@ export default function HwrTransferForm({
   extraSources
 }: Props) {
   const [note, setNote] = useState<string>("");
+  const [busy, setBusy] = useState(false);
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
 
   const edgesOk = useMemo(() => {
     const primaryOk = isEdgeAvailable(registry, token, origin, destination);
@@ -86,25 +93,43 @@ export default function HwrTransferForm({
       </div>
 
       <button
-        disabled={!edgesOk}
+        disabled={!edgesOk || !address || !walletClient || busy}
         className="w-full rounded-md bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-50"
-        onClick={() => {
-          alert(
-            JSON.stringify(
-              {
-                type: "HWR",
-                token,
-                destination,
-                primary: { origin, amount },
-                extras: extraSources
-              },
-              null,
-              2
-            )
-          );
+        onClick={async () => {
+          if (!edgesOk) {
+            toast.error("No valid HWR edge for this route");
+            return;
+          }
+          let client = walletClient;
+          if (!address || !client) {
+            const devClient = await getDevWalletClient(origin);
+            if (!devClient) {
+              toast.error("Connect a wallet first");
+              return;
+            }
+            client = devClient as any;
+          }
+          try {
+            setBusy(true);
+            const tx = await sendHwr({
+              registry,
+              token,
+              origin,
+              destination,
+              amount: amount || "0",
+              sender: (address || (client?.account?.address as `0x${string}`)) as `0x${string}`,
+              walletClient: client
+            });
+            toast.success(`Submitted: ${tx.hash.slice(0, 10)}…`);
+          } catch (e: any) {
+            console.error(e);
+            toast.error(e?.message || "HWR transfer failed");
+          } finally {
+            setBusy(false);
+          }
         }}
       >
-        Review &amp; Continue
+        {busy ? "Submitting…" : "Review &amp; Continue"}
       </button>
     </div>
   );

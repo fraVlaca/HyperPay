@@ -18,6 +18,10 @@
           "arbitrum": "0xDe95b0d8C5a1Cd9939A63A51ebf07732F1aCc92D",
           "optimism": "0x2A0B01E072b3d68249A2b3666cB90585eC4bd79e"
         },
+        "collateralTokens": {
+          "ethereum": "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8",
+          "arbitrum": "0x46850aD61C2B7d64d08c9C754F45254596696984"
+        },
         "edges": [
           { "from": "ethereum", "to": "optimism" },
           { "from": "arbitrum", "to": "optimism" }
