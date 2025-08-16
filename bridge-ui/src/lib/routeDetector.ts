@@ -51,6 +51,7 @@ export function detectRoute(
     !!oft.oft.oft[input.origin] &&
     !!oft.oft.oft[input.destination];
 
+
   if (hwrHasPath) {
     return { bridge: "HWR", route: hwr!, supportsMultiSource: hwr!.hwr.supportsMultiSource };
   }

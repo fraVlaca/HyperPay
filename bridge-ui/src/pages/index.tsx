@@ -36,11 +36,12 @@ export default function Home() {
 
   const detection = useMemo(() => {
     if (!registry) return null;
-    return detectRoute(registry, {
+    const res = detectRoute(registry, {
       token: selection.token,
       origin: selection.origin,
       destination: selection.destination
     });
+    return res;
   }, [registry, selection]);
 
   if (!registry) {
