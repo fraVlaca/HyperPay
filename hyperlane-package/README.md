@@ -12,11 +12,31 @@ Key features
 Usage
 - kurtosis clean -a
 - kurtosis run --enclave hyperlane ./hyperlane-package --args-file ./hyperlane-package/config/config.yaml
-- View logs: kurtosis service logs hyperlane relayer
+- View logs:
+  - kurtosis service logs hyperlane relayer
+  - kurtosis service logs hyperlane validator-ethereum
+  - kurtosis service logs hyperlane validator-arbitrum
+  - kurtosis service logs hyperlane rebalancer
 
 Configuration
 - See ./config/schema.yaml for full schema
 - Default example: ./config/config.yaml
+
+Providing RPCs and secrets
+- Edit ./config/config.yaml (or create your own and pass via --args-file)
+- Set per-chain rpc_url values to your providers (e.g., Alchemy/Infura)
+- Set agent keys:
+  - agents.relayer.key: 0x-prefixed private key for relayer
+  - agents.validators[].signing_key: per-chain validator private keys
+- Optional: configure S3/GCS checkpoint syncers by switching type and providing params
+
+Smoke tests (manual)
+- With deploy_core=false (default), ensure existing_addresses are set in your args or that the public registry is sufficient for your needs
+- Start the enclave and check:
+  - Relayer: reports watching chains and running; no missing CONFIG_FILES errors
+  - Validators: start and write to /validator-checkpoints
+  - Rebalancer: HTTP 200 at / (ok response)
+- Optional: once CLI wiring is complete, run a hello-world Hyperlane message or a warp route send
 
 Status (milestone 1)
 - Scaffolded package structure and images
