@@ -235,14 +235,8 @@ def run(plan, args):
                     "/rebalancer-db": rebal_db_dir,
                     "/configs": configs_dir,
                 },
-                ports = {"http": PortSpec(number=8080)},
+                ports = {"http": PortSpec(8080)},
             ),
-    plan.store_service_files(
-        name = "configs-dump",
-        service_name = "hyperlane-cli",
-        src = "/configs",
-    )
-
         )
 
     return None
