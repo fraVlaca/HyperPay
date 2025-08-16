@@ -1,9 +1,7 @@
-def _get(arg_map, key, default=None):
+def _get(arg_map, key, default=""):
     return arg_map[key] if key in arg_map else default
 
 def _as_bool(v, default=False):
-    if v is None:
-        return default
     if type(v) == "bool":
         return v
     if type(v) == "string":
