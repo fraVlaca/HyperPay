@@ -18,6 +18,11 @@ Configuration
 - See ./config/schema.yaml for full schema
 - Default example: ./config/config.yaml
 
+Status (milestone 1)
+- Scaffolded package structure and images
+- Validators and relayer services are wired; rebalancer scaffold (CCTP+OFT) included
+- Next: wire hyperlane-cli steps (core deploy + warp routes) and generate /configs/agent-config.json from args/deploy outputs
+
 Notes
 - Provide valid RPC URLs and funded keys where required
 - Defaults use mainnets; switch to testnets by editing config.yaml
