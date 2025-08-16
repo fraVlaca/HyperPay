@@ -24,6 +24,7 @@ def run(plan, args):
     chains = _get(args, "chains", [])
     agents = _get(args, "agents", {})
     warp_routes = _get(args, "warp_routes", [])
+    send_test = _get(args, "send_test", {})
     glob = _get(args, "global", {})
     if len(chains) < 2:
         fail("at least 2 chains are required")
@@ -35,8 +36,6 @@ def run(plan, args):
     allow_local_sync = _as_bool(_get(relayer_cfg, "allow_local_checkpoint_syncers", True), True)
     deployer_cfg = _get(agents, "deployer", {})
     deployer_key = _get(deployer_cfg, "key", "")
-    rebal_cfg = _get(agents, "rebalancer", {})
-    rebalancer_key = _get(rebal_cfg, "key", "")
 
     configs_dir = Directory(persistent_key="configs")
     val_ckpts_dir = Directory(persistent_key="validator-checkpoints")
@@ -46,7 +45,6 @@ def run(plan, args):
         image_name = "hyperlane-cli-img",
         build_context_dir = "./src/cli",
     )
-
 
     agent_cfg_img = ImageBuildSpec(
         image_name = "agent-config-gen-img",
@@ -100,12 +98,29 @@ def run(plan, args):
 
     for wr in warp_routes:
         sym = _get(wr, "symbol", "route")
+        mode = _get(wr, "mode", "lock_release")
         plan.exec(
             service_name = "hyperlane-cli",
             recipe = ExecRecipe(
-                command = ["sh", "-lc", "ROUTE_SYMBOL=" + sym + " /usr/local/bin/warp_routes.sh"],
+                command = ["sh", "-lc", "ROUTE_SYMBOL=" + sym + " MODE=" + mode + " /usr/local/bin/warp_routes.sh"],
             ),
         )
+        init_liq = _get(wr, "initialLiquidity", [])
+        if len(init_liq) > 0:
+            pairs = []
+            for il in init_liq:
+                c = _get(il, "chain", "")
+                a = _get(il, "amount", "")
+                if c != "" and a != "":
+                    pairs.append(c + "=" + str(a))
+            liq_str = _join(pairs, ",")
+            if liq_str != "":
+                plan.exec(
+                    service_name = "hyperlane-cli",
+                    recipe = ExecRecipe(
+                        command = ["sh", "-lc", "INITIAL_LIQUIDITY=\"" + liq_str + "\" /usr/local/bin/seed_liquidity.sh"],
+                    ),
+                )
 
     yaml_content = "chains:\n"
     for ch in chains:
@@ -136,7 +151,6 @@ def run(plan, args):
             cmd = ["/seed/args.yaml", "/configs/agent-config.json"],
         ),
     )
-
 
     agent_image = "gcr.io/abacus-labs-dev/hyperlane-agent:" + str(agent_tag)
 
@@ -228,5 +242,15 @@ def run(plan, args):
         ),
     )
 
+    if _as_bool(_get(send_test, "enabled", False), False):
+        origin = _get(send_test, "origin", "ethereum")
+        dest = _get(send_test, "destination", "arbitrum")
+        amt = _get(send_test, "amount", "1")
+        plan.exec(
+            service_name = "hyperlane-cli",
+            recipe = ExecRecipe(
+                command = ["sh", "-lc", "ORIGIN=" + origin + " DESTINATION=" + dest + " AMOUNT=" + str(amt) + " /usr/local/bin/send_warp.sh"],
+            ),
+        )
 
     return None

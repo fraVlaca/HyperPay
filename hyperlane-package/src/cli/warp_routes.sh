@@ -8,6 +8,7 @@ fi
 mkdir -p /configs /configs/registry
 
 route_symbol="${ROUTE_SYMBOL:-route}"
+mode="${MODE:-lock_release}"
 
 if [ -z "${HYP_KEY:-}" ]; then
   echo "HYP_KEY not set (agents.deployer.key). Required for warp route operations."; exit 1
@@ -17,11 +18,16 @@ if [ -z "${CHAIN_NAMES:-}" ]; then
   echo "CHAIN_NAMES not set"; exit 1
 fi
 
-stamp="/configs/.done-warp-${route_symbol}"
+case "$mode" in
+  lock_release|lock_mint|burn_mint) ;;
+  *) echo "Unknown MODE '$mode'"; exit 2 ;;
+esac
+
+stamp="/configs/.done-warp-${route_symbol}-${mode}"
 if [ -f "${stamp}" ]; then
-  echo "warp route ${route_symbol} already configured, skipping"
+  echo "warp route ${route_symbol} (${mode}) already configured, skipping"
 else
-  echo "Configuring warp route ${route_symbol}"
+  echo "Configuring warp route ${route_symbol} (${mode})"
   warp_cfg="/configs/warp-${route_symbol}.yaml"
 
   {

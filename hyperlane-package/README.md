@@ -8,7 +8,7 @@ Key features
 - Orchestrates Hyperlane CLI for core deploy and HWR 2.0 warp routes
 - Launches validator(s) and relayer; local checkpoint syncer by default (S3/GCS optional)
 - No public RPC fallbacks: agents and CLI use only the RPCs you provide
-- No rebalancer service included: use Hyperlane’s official CCTP rebalancer separately if needed
+- No custom rebalancer bundled: reuse Hyperlane’s official rebalancer and CLI
 
 Usage
 - kurtosis clean -a
@@ -29,6 +29,10 @@ Args schema overview
   - validators[]: { chain, signing_key, checkpoint_syncer: { type: local|s3|gcs, params: {...} } }
 - warp_routes[]:
   - symbol, decimals, topology { chain: collateral|synthetic }, token_addresses { chain: token }, owner
+  - mode: lock_release | lock_mint | burn_mint
+  - initialLiquidity[]: for lock_release native, list of { chain, amount } amounts in wei to seed release side
+- send_test:
+  - enabled, origin, destination, amount (wei)
 - global:
   - registry_mode: local|public, agent_image_tag, cli_version
 
@@ -76,7 +80,19 @@ Local override example (do not commit)
       topology:
         ethereum: collateral
         arbitrum: synthetic
+      mode: lock_release
+      initialLiquidity:
+        - chain: ethereum
+          amount: "10000000000000000"
+        - chain: arbitrum
+          amount: "10000000000000000"
       owner: 0xOWNER_EOA
+
+  send_test:
+    enabled: true
+    origin: ethereum
+    destination: arbitrum
+    amount: "1"
 
   global:
     registry_mode: local
@@ -87,29 +103,16 @@ Run with:
 - kurtosis clean -a
 - kurtosis run --enclave hyperlane ./hyperlane-package --args-file ~/local.args.yaml
 
-Warp routes (HWR 2.0) example snippet
-- Configure a simple test route between Ethereum (collateral) and Arbitrum (synthetic):
-  warp_routes:
-    - symbol: TEST
-      decimals: 18
-      topology:
-        ethereum: collateral
-        arbitrum: synthetic
-      owner: 0xOWNER_EOA
+Topologies
+- lock_release: native-to-native; for ETH-ETH, seed initialLiquidity on release side(s) in wei. Uses only official Hyperlane CLI.
+- lock_mint: lock canonical, mint synthetic; configure topology accordingly.
+- burn_mint: burn on source, mint on destination where supported; configure topology accordingly.
 
-Checkpoint syncers
-- Local (default): validators write to /data/validator-checkpoints (container-local path).
-- S3: set agents.validators[].checkpoint_syncer to:
-    type: s3
-    params: { bucket: YOUR_BUCKET, region: YOUR_REGION, prefix: optional/prefix, basePath: optionalBasePath }
-- GCS: set:
-    type: gcs
-    params: { bucket: YOUR_BUCKET, prefix: optional/prefix, basePath: optionalBasePath }
-
-Notes
-- With deploy_core=true, the CLI deploys core and writes addresses into /configs/addresses-<chain>.json.
-- agent-config.json is generated from those deployed artifacts; no public registry lookups are used.
-- Provide valid RPC URLs and funded keys. Defaults use mainnets; switch to testnets by editing config.yaml.
+Seeding initial liquidity (official tooling)
+- initialLiquidity is honored automatically after warp deployment when provided in args.
+- The CLI service will derive route addresses via `hyperlane warp read` and seed each listed chain using:
+  - `hyperlane submit --chain <chain> --to <derivedAddress> --value <amountWei> -r /configs/registry -y`
+- No public RPCs are used.
 
 Smoke tests (manual)
 - Start the enclave and check:
@@ -118,7 +121,7 @@ Smoke tests (manual)
   - Relayer: watches chains and runs; no CONFIG_FILES errors
   - Validators: start and write to /data/validator-checkpoints
 ## Warp route quick test (cross-chain send)
-- Ensure your enclave is running and the TEST warp route is deployed.
+- Ensure your enclave is running and the TEST warp route is deployed and seeded.
 - Run a small transfer from ethereum to arbitrum using only your provided RPCs:
 
   kurtosis service exec hyperlane hyperlane-cli "sh -lc 'hyperlane warp send --origin ethereum --destination arbitrum --warp /configs/registry/deployments/warp_routes/ETH/arbitrum-ethereum-config.yaml --amount 1 --relay -r /configs/registry -y'"
@@ -130,9 +133,6 @@ Smoke tests (manual)
   kurtosis service logs hyperlane validator-ethereum
   kurtosis service logs hyperlane validator-arbitrum
 
-- You should see:
-  - The origin transaction hash printed by the CLI send command
-  - The relayer detecting the message and submitting it to the destination
 - Alternatively, you can use the helper script baked into the CLI container:
 
   kurtosis service exec hyperlane hyperlane-cli "sh -lc 'ORIGIN=ethereum DESTINATION=arbitrum WARP_FILE=/configs/registry/deployments/warp_routes/ETH/arbitrum-ethereum-config.yaml AMOUNT=1 /usr/local/bin/send_warp.sh'"

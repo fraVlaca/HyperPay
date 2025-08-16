@@ -7,6 +7,7 @@ WORKDIR /work
 COPY deploy_core.sh /usr/local/bin/deploy_core.sh
 COPY warp_routes.sh /usr/local/bin/warp_routes.sh
 COPY send_warp.sh /usr/local/bin/send_warp.sh
+COPY seed_liquidity.sh /usr/local/bin/seed_liquidity.sh
 COPY balances.js /usr/local/bin/balances.js
 COPY parse_txhash.js /usr/local/bin/parse_txhash.js
-RUN chmod +x /usr/local/bin/deploy_core.sh /usr/local/bin/warp_routes.sh /usr/local/bin/send_warp.sh
+RUN chmod +x /usr/local/bin/deploy_core.sh /usr/local/bin/warp_routes.sh /usr/local/bin/send_warp.sh /usr/local/bin/seed_liquidity.sh
