@@ -43,22 +43,13 @@ TMP_OUT="/tmp/warp-derived.json"
 READ_RC=1
 set +e
 if [ -n "$SYMBOL" ]; then
-  hyperlane warp read --warp "$WARP_FILE" --symbol "$SYMBOL" -r "$REGISTRY_DIR" -y --log json > "$TMP_OUT"
+  hyperlane warp read --symbol "$SYMBOL" -r "$REGISTRY_DIR" -y > "$TMP_OUT"
   READ_RC=$?
 else
-  hyperlane warp read --warp "$WARP_FILE" -r "$REGISTRY_DIR" -y --log json > "$TMP_OUT"
+  hyperlane warp read -r "$REGISTRY_DIR" -y > "$TMP_OUT"
   READ_RC=$?
 fi
 set -e
-
-if [ $READ_RC -ne 0 ]; then
-  if [ -n "$SYMBOL" ]; then
-    set +e
-    hyperlane warp read --symbol "$SYMBOL" -r "$REGISTRY_DIR" -y --log json > "$TMP_OUT"
-    READ_RC=$?
-    set -e
-  fi
-fi
 
 if [ $READ_RC -ne 0 ]; then
   if ! command -v node >/dev/null 2>&1; then
@@ -95,10 +86,18 @@ else
   fi
   node - <<'NODE' "$INITIAL_LIQUIDITY" "$TMP_OUT" > /tmp/seed-plan.txt
 const fs = require('fs');
+const yaml = require('yaml');
 const liq = process.argv[2];
 const outPath = process.argv[3];
-let doc;
-try { doc = JSON.parse(fs.readFileSync(outPath, 'utf8')); } catch { doc = null; }
+let raw;
+try { raw = fs.readFileSync(outPath, 'utf8'); } catch { raw = null; }
+let doc = null;
+if (raw) {
+  try { doc = JSON.parse(raw); } catch {}
+  if (!doc) {
+    try { doc = yaml.parse(raw); } catch {}
+  }
+}
 if (!doc || !doc.tokens) {
   process.exit(4);
 }

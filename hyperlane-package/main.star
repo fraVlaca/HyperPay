@@ -246,10 +246,13 @@ def run(plan, args):
         origin = _get(send_test, "origin", "ethereum")
         dest = _get(send_test, "destination", "arbitrum")
         amt = _get(send_test, "amount", "1")
+        test_symbol = "TEST"
+        if len(warp_routes) > 0:
+            test_symbol = _get(warp_routes[0], "symbol", test_symbol)
         plan.exec(
             service_name = "hyperlane-cli",
             recipe = ExecRecipe(
-                command = ["sh", "-lc", "REGISTRY_DIR=/configs/registry SYMBOL=" + sym + " ORIGIN=" + origin + " DESTINATION=" + dest + " AMOUNT=" + str(amt) + " /usr/local/bin/send_warp.sh"],
+                command = ["sh", "-lc", "REGISTRY_DIR=/configs/registry SYMBOL=" + test_symbol + " ORIGIN=" + origin + " DESTINATION=" + dest + " AMOUNT=" + str(amt) + " /usr/local/bin/send_warp.sh"],
             ),
         )
 
