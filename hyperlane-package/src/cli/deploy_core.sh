@@ -68,7 +68,7 @@ EOF
   core_cfg="/configs/core-${ch}.yaml"
 
   echo "Initializing core config for ${ch}"
-  printf "\n" | hyperlane core init -y
+  yes "" | hyperlane core init -y
   if [ -f "./configs/core-config.yaml" ]; then
     cp "./configs/core-config.yaml" "${core_cfg}"
   else
