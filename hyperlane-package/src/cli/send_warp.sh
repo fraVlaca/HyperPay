@@ -15,13 +15,13 @@ AMOUNT="${AMOUNT:-1}"
 if [ -z "${HYP_KEY:-}" ]; then
   echo "HYP_KEY not set. Provide the private key for the sender (deployer) via environment."
   exit 1
+fi
+
 if [ -z "$WARP_FILE" ]; then
   CANDIDATE="$(ls -1 "$REGISTRY_DIR"/deployments/warp_routes/*/*.yaml 2>/dev/null | head -n1 || true)"
   if [ -n "$CANDIDATE" ] && [ -f "$CANDIDATE" ]; then
     WARP_FILE="$CANDIDATE"
   fi
-fi
-
 fi
 
 if [ -n "$WARP_FILE" ] && [ -f "$WARP_FILE" ]; then
