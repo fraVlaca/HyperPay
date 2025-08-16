@@ -8,6 +8,7 @@ Key features
 - Orchestrates Hyperlane CLI for core deploy and HWR 2.0 warp routes
 - Launches validator(s) and relayer; local checkpoint syncer by default (S3/GCS optional)
 - No public RPC fallbacks: agents and CLI use only the RPCs you provide
+- No rebalancer service included: use Hyperlane’s official CCTP rebalancer separately if needed
 
 Usage
 - kurtosis clean -a
