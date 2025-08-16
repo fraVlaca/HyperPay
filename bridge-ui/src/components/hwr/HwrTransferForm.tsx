@@ -104,7 +104,7 @@ export default function HwrTransferForm({
           );
         }}
       >
-        Review & Continue
+        Review &amp; Continue
       </button>
     </div>
   );
