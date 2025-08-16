@@ -20,6 +20,12 @@ Usage
 
 Configuration
 - See ./config/schema.yaml for full schema
+Agent keys in args.yaml
+- agents.deployer.key: used by hyperlane-cli for core/warp operations
+- agents.relayer.key: used by relayer
+- agents.validators[].signing_key: per-chain validators
+- agents.rebalancer.key: used by rebalancer service when executing transfers via adapters
+
 - Default example: ./config/config.yaml
 
 Providing RPCs and secrets
