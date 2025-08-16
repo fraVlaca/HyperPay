@@ -18,8 +18,31 @@ Minimal TS CLI helpers to:
   - pnpm extend -- --config ./samples/sepolia-triangle.json --deploy
 - Wire OFT Native ETH adapters (expects adapters already deployed; this script sets peers and emits an artifact):
   - OFT_NATIVE_SEPOLIA=0x... OFT_NATIVE_ARBSEPOLIA=0x... pnpm deploy:oft:native -- --config ./samples/oft-native.json
+  - Env fallbacks supported: LZ_DEPLOYER_PRIVATE_KEY, SEPOLIA_RPC_URL, ARB_SEPOLIA_RPC_URL
 - Build merged registry JSON for the UI from artifacts:
   - pnpm registry:build
+
+## OFT (ERC-20, e.g., WETH)
+
+- Wire OFT ERC-20 adapters (expects OFTAdapters already deployed):
+  - OFT_ERC20_SEPOLIA=0x... OFT_ERC20_ARBSEPOLIA=0x... pnpm deploy:oft:erc20 -- --config ./samples/oft-erc20.json
+
+### Sample config: samples/oft-erc20.json
+{
+  "token": { "symbol": "WETH", "decimals": 18 },
+  "erc20": {
+    "sepolia": "0xFfF9976782d46CC05630D1f6eBAb18b2324d6B14",
+    "arbSepolia": "0x<arbSepoliaWeth>"
+  },
+  "chains": {
+    "sepolia": { "rpcUrl": "https://ethereum-sepolia-rpc.publicnode.com", "eid": 40161 },
+    "arbSepolia": { "rpcUrl": "https://api.zan.top/arb-sepolia", "eid": 40231 }
+  },
+  "deployer": { "privateKey": "" },
+  "out": "./artifacts/oft-erc20.weth.sepolia-arbSepolia.json",
+  "dryRun": false
+}
+
 
 ## Inputs
 
@@ -40,10 +63,10 @@ Minimal TS CLI helpers to:
 {
   "token": { "symbol": "ETH", "decimals": 18 },
   "chains": {
-    "sepolia": { "rpcUrl": "https://...", "eid": 40161 },
-    "arbSepolia": { "rpcUrl": "https://...", "eid": 40231 }
+    "sepolia": { "rpcUrl": "https://ethereum-sepolia-rpc.publicnode.com", "eid": 40161 },
+    "arbSepolia": { "rpcUrl": "https://api.zan.top/arb-sepolia", "eid": 40231 }
   },
-  "deployer": { "privateKey": "0x..." },
+  "deployer": { "privateKey": "" },
   "out": "./artifacts/oft-native.eth.sepolia-arbSepolia.json",
   "dryRun": false
 }
@@ -51,6 +74,9 @@ Minimal TS CLI helpers to:
 Env required for OFT wiring:
 - OFT_NATIVE_SEPOLIA=0x... (NativeOFTAdapter on Sepolia)
 - OFT_NATIVE_ARBSEPOLIA=0x... (NativeOFTAdapter on Arbitrum Sepolia)
+- LZ_DEPLOYER_PRIVATE_KEY=0x... (fallback if not provided in JSON)
+- SEPOLIA_RPC_URL=https://... (fallback if not provided in JSON)
+- ARB_SEPOLIA_RPC_URL=https://... (fallback if not provided in JSON)
 
 ## Outputs
 
