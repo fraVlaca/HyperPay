@@ -1,4 +1,4 @@
-export type ChainKey = "ethereum" | "arbitrum" | "base";
+export type ChainKey = "ethereum" | "arbitrum" | "optimism" | "base";
 
 export type ChainConfig = {
   key: ChainKey;
