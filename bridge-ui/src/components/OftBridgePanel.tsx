@@ -1,9 +1,4 @@
-import dynamic from "next/dynamic";
 import { ChainKey, UnifiedRegistry } from "@config/types";
-
-const OftWidget = dynamic(() => import("@layerzerolabs/ui-bridge-oft").then((m: any) => m.OftBridge || m.default || m), {
-  ssr: false
-}) as any;
 
 type Props = {
   registry: UnifiedRegistry;
@@ -31,18 +26,16 @@ export default function OftBridgePanel({
       <div className="flex items-center justify-between">
         <h3 className="text-base font-medium">LayerZero OFT</h3>
       </div>
-      <div className="pt-2">
-        <div className="text-sm text-gray-600">
-          This panel renders the OFT widget when dependencies are installed.
+      <div className="pt-2 space-y-2">
+        <div className="text-sm text-gray-700">
+          OFT route detected. The LayerZero OFT widget is not exported as a React component from
+          @layerzerolabs/ui-bridge-oft. This panel will be wired to the proper UI package next.
         </div>
-        <div className="mt-2">
-          <OftWidget
-            tokenSymbol={token}
-            tokenAddresses={addresses}
-            originKey={origin}
-            destinationKey={destination}
-            amount={amount}
-          />
+        <div className="rounded-md border bg-gray-50 p-3 text-xs text-gray-600">
+          <div>Token: {token}</div>
+          <div>From: {origin} → To: {destination}</div>
+          <div>Amount: {amount || "0"}</div>
+          <div className="mt-1">Addresses: {JSON.stringify(addresses)}</div>
         </div>
       </div>
     </div>
