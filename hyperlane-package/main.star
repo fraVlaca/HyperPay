@@ -112,18 +112,13 @@ def run(plan, args):
             ["sh", "-lc", "ROUTE_SYMBOL=" + sym + " /usr/local/bin/warp_routes.sh"]
         )
 
-    chain_obj_strs = []
+    yaml_content = "chains:\\n"
     for ch in chains:
         name = ch["name"]
         rpc = ch["rpc_url"]
-        existing = _get(ch, "existing_addresses", {})
-        mailbox = _get(existing, "mailbox", "")
-        igp = _get(existing, "igp", "")
-        va = _get(existing, "validatorAnnounce", "")
-        ism = _get(existing, "ism", "")
-        chain_json = "{\\"name\\": \\"" + name + "\\", \\"rpc_url\\": \\"" + rpc + "\\", \\"existing_addresses\\": {\\"mailbox\\": \\"" + mailbox + "\\", \\"igp\\": \\"" + igp + "\\", \\"validatorAnnounce\\": \\"" + va + "\\", \\"ism\\": \\"" + ism + "\\"}}"
-        chain_obj_strs.append(chain_json)
-    args_json = "{\\n  \\"chains\\": [" + _join(chain_obj_strs, ",") + "]\\n}"
+        yaml_content += "- name: " + name + "\\n"
+        yaml_content += "  rpc_url: " + rpc + "\\n"
+        yaml_content += "  existing_addresses: {}\\n"
     plan.add_service(
         "agent-config-gen",
         {
@@ -132,9 +127,9 @@ def run(plan, args):
                 vol_configs: "/configs",
             },
             "files": {
-                "/configs/args.json": args_json,
+                "/configs/args.yaml": yaml_content,
             },
-            "cmd": ["/configs/args.json", "/configs/agent-config.json"],
+            "cmd": ["/configs/args.yaml", "/configs/agent-config.json"],
         },
     )
 
