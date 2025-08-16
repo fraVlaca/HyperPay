@@ -78,7 +78,9 @@ def run(plan, args):
             "vol_mounts": {
                 vol_configs: "/configs",
             },
-            "files": {},
+            "files": {
+                "/configs/agent-config.json": "{\\n  \\"chains\\": {}\\n}"
+            },
             "ports": {},
             "cmd": [],
             "entrypoint": [],
