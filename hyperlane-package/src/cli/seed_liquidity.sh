@@ -133,9 +133,9 @@ mkdir -p /tmp/txs
 # Create a combined transaction file for all chains
 combined_tx_file="/tmp/txs/all-chains.json"
 echo "{" > "$combined_tx_file"
-first=true
 
 # Process each chain's liquidity
+entries=""
 while read -r chain addr amount; do
   if [ -z "$chain" ] || [ -z "$addr" ] || [ -z "$amount" ]; then
     continue
@@ -143,31 +143,83 @@ while read -r chain addr amount; do
   
   echo "Preparing liquidity for $chain: $amount to $addr"
   
-  # Add comma if not first entry
-  if [ "$first" = true ]; then
-    first=false
-  else
-    echo "," >> "$combined_tx_file"
-  fi
-  
-  # Add chain transaction to combined file
-  cat >> "$combined_tx_file" <<EOF
-  "${chain}": [
+  # Build entry
+  entry="  \"${chain}\": [
     {
-      "to": "${addr}",
-      "value": "${amount}"
+      \"to\": \"${addr}\",
+      \"value\": \"${amount}\"
     }
-  ]
-EOF
-    
+  ]"
+  
+  if [ -z "$entries" ]; then
+    entries="$entry"
+  else
+    entries="${entries},
+${entry}"
+  fi
 done < /tmp/seed-plan.txt
+
+# Write entries to file
+echo "$entries" >> "$combined_tx_file"
 
 # Close the JSON object
 echo "}" >> "$combined_tx_file"
 
-# Submit all transactions at once
+# Submit using ethers.js instead of hyperlane submit
 echo "Submitting liquidity transactions..."
-hyperlane submit \
-  --transactions "$combined_tx_file" \
-  -r "$REGISTRY_DIR" \
-  -y || echo "Warning: Failed to seed liquidity"
+
+# Create ethers.js script for seeding
+cat > /tmp/ethers_seed.js << 'EOFSCRIPT'
+const { ethers } = require('ethers');
+const fs = require('fs');
+
+async function seedLiquidity() {
+  const key = process.env.HYP_KEY;
+  if (!key) {
+    console.error('HYP_KEY not set');
+    process.exit(1);
+  }
+
+  const txData = JSON.parse(fs.readFileSync('/tmp/txs/all-chains.json', 'utf8'));
+  
+  for (const [chain, txs] of Object.entries(txData)) {
+    console.log(`Processing ${chain}...`);
+    
+    // Get RPC URL from registry
+    const metadataPath = `/configs/registry/chains/${chain}/metadata.yaml`;
+    if (!fs.existsSync(metadataPath)) {
+      console.error(`Metadata not found for ${chain}`);
+      continue;
+    }
+    
+    const metadata = fs.readFileSync(metadataPath, 'utf8');
+    const rpcMatch = metadata.match(/http:\s*(\S+)/);
+    if (!rpcMatch) {
+      console.error(`RPC URL not found for ${chain}`);
+      continue;
+    }
+    
+    const rpcUrl = rpcMatch[1];
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const wallet = new ethers.Wallet(key, provider);
+    
+    for (const tx of txs) {
+      console.log(`Sending ${tx.value} wei to ${tx.to} on ${chain}...`);
+      try {
+        const txResponse = await wallet.sendTransaction({
+          to: tx.to,
+          value: tx.value
+        });
+        await txResponse.wait();
+        console.log(`Success! TX: ${txResponse.hash}`);
+      } catch (error) {
+        console.error(`Failed to send on ${chain}:`, error.message);
+      }
+    }
+  }
+}
+
+seedLiquidity().catch(console.error);
+EOFSCRIPT
+
+node /tmp/ethers_seed.js || echo "Warning: Failed to seed liquidity"
