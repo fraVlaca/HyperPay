@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import { useAccount, useWalletClient } from "wagmi";
 import type { ChainKey, UnifiedRegistry } from "@config/types";
 import clsx from "clsx";
+import { toast } from "react-toastify";
+
 type Props = {
   registry: UnifiedRegistry;
   token: string;
@@ -30,6 +32,12 @@ async function fetchOftTx(
   if (!res.ok) throw new Error("Failed to get OFT tx");
   return res.json();
 }
+
+const CHAIN_IDS: Record<string, number> = {
+  ethereum: 1,
+  arbitrum: 42161,
+  base: 8453
+};
 
 export default function OftTransferForm({
   registry,
@@ -71,10 +79,18 @@ export default function OftTransferForm({
           (!address || busy) && "opacity-50"
         )}
         onClick={async () => {
-          if (!address || !walletClient) return;
+          if (!address || !walletClient) {
+            toast.error("Connect a wallet first");
+            return;
+          }
+          const expectedChainId = CHAIN_IDS[origin];
+          if (expectedChainId && walletClient.chain && walletClient.chain.id !== expectedChainId) {
+            toast.error(`Switch wallet to ${origin} to send`);
+            return;
+          }
           setBusy(true);
           try {
-            const txData = await fetchOftTx(apiBase, {
+            const txResp = await fetchOftTx(apiBase, {
               token,
               origin,
               destination,
@@ -83,14 +99,30 @@ export default function OftTransferForm({
               eids: cfg.eids as Record<string, number>,
               sender: address
             });
-            console.log("OFT tx", txData);
-            alert("OFT transfer prepared. Submit with wallet in next iteration.");
+
+            const tx = txResp?.tx || txResp;
+            if (!tx?.to || !tx?.data) {
+              console.log("Unexpected OFT API response", txResp);
+              toast.error("Invalid OFT API response");
+              return;
+            }
+
+            const hash = await walletClient.sendTransaction({
+              to: tx.to as `0x${string}`,
+              data: tx.data as `0x${string}`,
+              value: tx.value ? BigInt(tx.value) : undefined
+            });
+
+            toast.success(`Submitted: ${hash.slice(0, 10)}…`);
+          } catch (e: any) {
+            console.error(e);
+            toast.error(e?.message || "OFT transfer failed");
           } finally {
             setBusy(false);
           }
         }}
       >
-        Review & Send
+        Review &amp; Send
       </button>
     </div>
   );
