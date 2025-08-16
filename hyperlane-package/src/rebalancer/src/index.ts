@@ -1,4 +1,4 @@
-import http from 'http';
+import http, { IncomingMessage, ServerResponse } from 'http';
 import { shouldRebalance, type PolicyConfig, type BalanceSnapshot } from './policy.js';
 import { executeCctpTransfer } from './adapters/cctp.js';
 import { executeOftTransfer } from './adapters/oft.js';
@@ -14,7 +14,7 @@ const cfg: PolicyConfig = {
 
 let lastStatus: any = { ok: true, ts: Date.now(), adapter: ADAPTER, loop: 'idle' };
 
-const server = http.createServer((_req, res) => {
+const server = http.createServer((_req: IncomingMessage, res: ServerResponse) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(lastStatus));
 });
