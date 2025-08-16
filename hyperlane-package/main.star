@@ -86,6 +86,24 @@ def run(plan, args):
             "entrypoint": [],
         },
     )
+    need_core = False
+    for ch in chains:
+        if _as_bool(_get(ch, "deploy_core", False), False):
+            need_core = True
+
+    if need_core:
+        plan.exec(
+            "hyperlane-cli",
+            ["sh", "-lc", "/usr/local/bin/deploy_core.sh"]
+        )
+
+    for wr in warp_routes:
+        sym = _get(wr, "symbol", "route")
+        plan.exec(
+            "hyperlane-cli",
+            ["sh", "-lc", "ROUTE_SYMBOL=" + sym + " /usr/local/bin/warp_routes.sh"]
+        )
+
     chain_obj_strs = []
     for ch in chains:
         name = ch["name"]
