@@ -68,10 +68,15 @@ def run(plan, args):
         chain_names.append(ch["name"])
     relay_chains = _join(chain_names, ",")
 
+    rpc_pairs = []
+    for ch in chains:
+        rpc_pairs.append(ch["name"] + "=" + ch["rpc_url"])
+    chain_rpcs = _join(rpc_pairs, ",")
     cli_env = {
         "CLI_VERSION": str(cli_version),
         "REGISTRY_MODE": str(registry_mode),
         "CHAIN_NAMES": relay_chains,
+        "CHAIN_RPCS": chain_rpcs,
         "HYP_KEY": str(deployer_key),
     }
 

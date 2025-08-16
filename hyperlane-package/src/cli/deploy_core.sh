@@ -15,6 +15,16 @@ if [ -z "${HYP_KEY:-}" ]; then
   echo "HYP_KEY not set (agents.deployer.key). Required for core deployment."; exit 1
 fi
 
+declare -A RPCS=()
+if [ -n "${CHAIN_RPCS:-}" ]; then
+  IFS=',' read -r -a PAIRS <<< "${CHAIN_RPCS}"
+  for p in "${PAIRS[@]}"; do
+    k="${p%%=*}"
+    v="${p#*=}"
+    RPCS["$k"]="$v"
+  done
+fi
+
 IFS=',' read -r -a CHAINS <<< "${CHAIN_NAMES}"
 for ch in "${CHAINS[@]}"; do
   stamp="/configs/.done-core-${ch}"
@@ -23,9 +33,18 @@ for ch in "${CHAINS[@]}"; do
     continue
   fi
 
+  rpc="${RPCS[$ch]:-}"
+  if [ -z "$rpc" ]; then
+    echo "warning: no RPC provided for chain ${ch}; CLI may rely on registry/public config"
+  fi
+
   echo "Deploying Hyperlane core to ${ch} (registry_mode=${REGISTRY_MODE:-public})"
-  echo "hyperlane core init --chain ${ch} --registry ${REGISTRY_MODE:-public}"
-  echo "hyperlane core deploy --chain ${ch} --key \$HYP_KEY"
+  hyperlane core init --chain "${ch}" --registry "${REGISTRY_MODE:-public}"
+  if [ -n "$rpc" ]; then
+    hyperlane core deploy --chain "${ch}" --key "$HYP_KEY" --rpcUrl "$rpc"
+  else
+    hyperlane core deploy --chain "${ch}" --key "$HYP_KEY"
+  fi
   touch "${stamp}"
 done
 

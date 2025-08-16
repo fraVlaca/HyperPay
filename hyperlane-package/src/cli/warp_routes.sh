@@ -18,8 +18,8 @@ if [ -f "${stamp}" ]; then
   echo "warp route ${route_symbol} already configured, skipping"
 else
   echo "Configuring warp route ${route_symbol}"
-  echo "hyperlane warp init --symbol ${route_symbol}"
-  echo "hyperlane warp deploy --symbol ${route_symbol} --key \$HYP_KEY"
+  hyperlane warp init --symbol "${route_symbol}"
+  hyperlane warp deploy --symbol "${route_symbol}" --key "$HYP_KEY"
   touch "${stamp}"
 fi
 

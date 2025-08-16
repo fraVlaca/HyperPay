@@ -1,10 +1,10 @@
 chains:
   - name: ethereum
-    rpc_url: https://eth-mainnet.example
+    rpc_url: https://65d1c7945fa54cfe8325e61562fe97f3-rpc.network.bloctopus.io/
     chain_id: 1
     deploy_core: false
   - name: arbitrum
-    rpc_url: https://arb1.arbitrum.io/rpc
+    rpc_url: https://d88be824605745c0a09b1111da4727fd-rpc.network.bloctopus.io/
     chain_id: 42161
     deploy_core: false
 
