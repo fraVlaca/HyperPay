@@ -124,6 +124,7 @@ def run(plan, args):
         env = {
             "VALIDATOR_KEY": vkey,
             "ORIGIN_CHAIN": vchain,
+            "CONFIG_FILES": "/configs/agent-config.json",
         }
         if cstype == "local":
             env["CHECKPOINT_SYNCER_TYPE"] = "local"
