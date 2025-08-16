@@ -10,19 +10,19 @@ chains:
 
 agents:
   deployer:
-    key: 0xYOUR_PRIVATE_KEY
+    key: 0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31
   relayer:
-    key: 0xYOUR_PRIVATE_KEY
+    key: 0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31
     allow_local_checkpoint_syncers: true
   validators:
     - chain: ethereum
-      signing_key: 0xYOUR_PRIVATE_KEY
+      signing_key: 0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31
       checkpoint_syncer:
         type: local
         params:
           path: /validator-checkpoints
     - chain: arbitrum
-      signing_key: 0xYOUR_PRIVATE_KEY
+      signing_key: 0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31
       checkpoint_syncer:
         type: local
         params:
