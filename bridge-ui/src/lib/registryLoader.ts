@@ -36,7 +36,8 @@ export async function loadRegistry(): Promise<UnifiedRegistry> {
     routes: [...REGISTRY_SAMPLE.routes]
   };
 
-  const remote = (await tryFetch(process.env.NEXT_PUBLIC_HYPERLANE_REGISTRY_URL)) as UnifiedRegistry | null;
+  const remoteUrl = (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_HYPERLANE_REGISTRY_URL : undefined) as string | undefined;
+  const remote = (await tryFetch(remoteUrl)) as UnifiedRegistry | null;
   if (remote) {
     merged = {
       chains: dedupeBy([...merged.chains, ...(remote.chains || [])], (c) => c.key),
@@ -45,7 +46,7 @@ export async function loadRegistry(): Promise<UnifiedRegistry> {
     };
   }
 
-  const artifactUrl = process.env.NEXT_PUBLIC_REGISTRY_JSON_URL;
+  const artifactUrl = (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_REGISTRY_JSON_URL : undefined) as string | undefined;
   const artifact = await tryFetch(artifactUrl);
   if (artifact) {
     const chainsFromArtifact = Array.isArray(artifact.chains)

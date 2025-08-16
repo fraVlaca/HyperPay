@@ -120,6 +120,7 @@ function writeArtifact(input: Input, outDir: string) {
   const ap =
     input.artifactOut ||
     resolve(outDir, `hwr.${input.token.symbol.toLowerCase()}.${input.collaterals.join("-")}-to-${input.synthetic}.json`);
+  ensureDir(resolve(outDir));
   writeFileSync(ap, JSON.stringify(artifact, null, 2));
   console.log("Wrote HWR artifact:", ap);
 }

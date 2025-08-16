@@ -15,7 +15,6 @@
     "@hyperlane-xyz/sdk": "^16.2.0",
     "@hyperlane-xyz/utils": "^16.2.0",
     "@hyperlane-xyz/widgets": "^16.2.0",
-    "@layerzerolabs/ui-bridge-oft": "0.1.23",
     "@rainbow-me/rainbowkit": "^2.2.0",
     "@tanstack/query-core": "^5.85.3",
     "@tanstack/react-query": "^5.85.3",

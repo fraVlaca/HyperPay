@@ -42,7 +42,7 @@ When the HWR route marks `supportsMultiSource: true`, the UI enables adding addi
 
 ## LayerZero OFT
 
-The OFT panel uses `@layerzerolabs/ui-bridge-oft`. After installing dependencies, the widget renders dynamically in the panel. Addresses and endpoint IDs are provided by the registry.
+The OFT panel uses a lightweight custom form that integrates with the OFT Transfer API (or direct ABI calls) and reads EIDs/addresses from the merged registry.
 
 ## Scripts
 
