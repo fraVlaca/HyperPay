@@ -1,0 +1,54 @@
+chains:
+  - name: ethereum
+    rpc_url: https://65d1c7945fa54cfe8325e61562fe97f3-rpc.network.bloctopus.io/
+    chain_id: 1
+    deploy_core: true
+  - name: arbitrum
+    rpc_url: https://d88be824605745c0a09b1111da4727fd-rpc.network.bloctopus.io/
+    chain_id: 42161
+    deploy_core: true
+
+agents:
+  deployer:
+    key: 0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31
+  relayer:
+    key: 0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31
+    allow_local_checkpoint_syncers: true
+  validators:
+    - chain: ethereum
+      signing_key: 0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31
+      checkpoint_syncer:
+        type: local
+        params:
+          path: /validator-checkpoints
+    - chain: arbitrum
+      signing_key: 0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31
+      checkpoint_syncer:
+        type: local
+        params:
+          path: /validator-checkpoints
+
+warp_routes:
+  - symbol: TEST
+    decimals: 18
+    topology:
+      ethereum: collateral
+      arbitrum: synthetic
+    mode: lock_release
+    initialLiquidity:
+      - chain: ethereum
+        amount: "10000000000000000"
+      - chain: arbitrum
+        amount: "10000000000000000"
+    owner: 0xOWNER_EOA
+
+send_test:
+  enabled: true
+  origin: ethereum
+  destination: arbitrum
+  amount: "1"
+
+global:
+  registry_mode: local
+  agent_image_tag: agents-v1.4.0
+  cli_version: latest

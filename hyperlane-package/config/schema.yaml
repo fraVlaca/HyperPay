@@ -1,0 +1,92 @@
+type: object
+properties:
+  chains:
+    type: array
+    minItems: 2
+    items:
+      type: object
+      properties:
+        name: { type: string }
+        rpc_url: { type: string }
+        chain_id: { type: integer }
+        deploy_core: { type: boolean }
+        existing_addresses:
+          type: object
+          additionalProperties: true
+      required: [name, rpc_url, deploy_core]
+  agents:
+    type: object
+    properties:
+      deployer:
+        type: object
+        properties:
+          key: { type: string }
+      relayer:
+        type: object
+        properties:
+          key: { type: string }
+          allow_local_checkpoint_syncers: { type: boolean }
+        required: [key]
+      validators:
+        type: array
+        items:
+          type: object
+          properties:
+            chain: { type: string }
+            signing_key: { type: string }
+            checkpoint_syncer:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [local, s3, gcs]
+                params:
+                  type: object
+                  additionalProperties: true
+              required: [type, params]
+          required: [chain, signing_key, checkpoint_syncer]
+    required: [relayer]
+  warp_routes:
+    type: array
+    items:
+      type: object
+      properties:
+        symbol: { type: string }
+        decimals: { type: integer }
+        topology:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [collateral, synthetic]
+        token_addresses:
+          type: object
+          additionalProperties: { type: string }
+        owner: { type: string }
+        mode:
+          type: string
+          enum: [lock_release, lock_mint, burn_mint]
+        initialLiquidity:
+          type: array
+          items:
+            type: object
+            properties:
+              chain: { type: string }
+              amount: { type: string }
+            required: [chain, amount]
+      required: [symbol, decimals, topology, owner]
+  send_test:
+    type: object
+    properties:
+      enabled: { type: boolean }
+      origin: { type: string }
+      destination: { type: string }
+      amount: { type: string }
+  global:
+    type: object
+    properties:
+      registry_mode:
+        type: string
+        enum: [local, public]
+      agent_image_tag: { type: string }
+      cli_version: { type: string }
+required: [chains, agents, global]
