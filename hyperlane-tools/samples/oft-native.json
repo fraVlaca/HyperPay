@@ -1,8 +1,8 @@
 {
   "token": { "symbol": "ETH", "decimals": 18 },
   "chains": {
-    "sepolia": { "rpcUrl": "", "eid": 40161 },
-    "arbSepolia": { "rpcUrl": "", "eid": 40231 }
+    "sepolia": { "rpcUrl": "https://ethereum-sepolia-rpc.publicnode.com", "eid": 40161 },
+    "arbSepolia": { "rpcUrl": "https://api.zan.top/arb-sepolia", "eid": 40231 }
   },
   "deployer": { "privateKey": "" },
   "out": "./artifacts/oft-native.eth.sepolia-arbSepolia.json",
