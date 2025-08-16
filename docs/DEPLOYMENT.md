@@ -1,3 +1,9 @@
+Routers (HWR 2.0, PYUSD)
+- ethereum: 0x76886b63257244CA00dAdE349d8Aa92b0a541fd9
+- arbitrum: 0xDe95b0d8C5a1Cd9939A63A51ebf07732F1aCc92D
+- optimism: 0x2A0B01E072b3d68249A2b3666cB90585eC4bd79e
+
+
 # PYUSD Bridging (Ethereum ↔ Optimism ↔ Arbitrum)
 
 This repository contains:
