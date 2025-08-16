@@ -55,6 +55,15 @@ Warp routes (HWR 2.0) example snippet
 
 Rebalancer adapter selection
 - Default adapter is CCTP; set REBALANCER_ADAPTER=oft in args if you intend to use an OFT route.
+Checkpoint syncers
+- Local (default): validators write to /validator-checkpoints (shared Kurtosis volume).
+- S3: set agents.validators[].checkpoint_syncer to:
+    type: s3
+    params: { bucket: YOUR_BUCKET, region: YOUR_REGION, prefix: optional/prefix, basePath: optionalBasePath }
+- GCS: set:
+    type: gcs
+    params: { bucket: YOUR_BUCKET, prefix: optional/prefix, basePath: optionalBasePath }
+
 - Adapters are placeholders; you must supply appropriate params and fund the rebalancer key when moving real value.
 - Edit ./config/config.yaml (or create your own and pass via --args-file)
 - Set per-chain rpc_url values to your providers (e.g., Alchemy/Infura)

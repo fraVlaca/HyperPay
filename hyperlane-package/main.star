@@ -143,6 +143,7 @@ def run(plan, args):
         vkey = vdesc["signing_key"]
         cs = vdesc["checkpoint_syncer"]
         cstype = cs["type"]
+        csp = _get(cs, "params", {})
         svc_name = "validator-" + vchain
         env = {
             "VALIDATOR_KEY": vkey,
@@ -154,8 +155,22 @@ def run(plan, args):
             env["CHECKPOINT_SYNCER_PATH"] = "/validator-checkpoints"
         elif cstype == "s3":
             env["CHECKPOINT_SYNCER_TYPE"] = "s3"
+            if "bucket" in csp:
+                env["S3_BUCKET"] = str(csp["bucket"])
+            if "region" in csp:
+                env["S3_REGION"] = str(csp["region"])
+            if "prefix" in csp:
+                env["S3_PREFIX"] = str(csp["prefix"])
+            if "basePath" in csp:
+                env["CHECKPOINT_BASE_PATH"] = str(csp["basePath"])
         elif cstype == "gcs":
             env["CHECKPOINT_SYNCER_TYPE"] = "gcs"
+            if "bucket" in csp:
+                env["S3_BUCKET"] = str(csp["bucket"])
+            if "prefix" in csp:
+                env["S3_PREFIX"] = str(csp["prefix"])
+            if "basePath" in csp:
+                env["CHECKPOINT_BASE_PATH"] = str(csp["basePath"])
         else:
             env["CHECKPOINT_SYNCER_TYPE"] = "local"
             env["CHECKPOINT_SYNCER_PATH"] = "/validator-checkpoints"
@@ -172,9 +187,13 @@ def run(plan, args):
                 "cmd": [
                     "sh",
                     "-lc",
-                    "hyperlane-validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY " +
+                    "hyperlane-validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY" +
                     " --checkpointSyncer.type $CHECKPOINT_SYNCER_TYPE" +
-                    " --checkpointSyncer.path ${CHECKPOINT_SYNCER_PATH:-/validator-checkpoints}"
+                    " --checkpointSyncer.path ${CHECKPOINT_SYNCER_PATH:-/validator-checkpoints}" +
+                    " --checkpointSyncer.bucket ${S3_BUCKET:-}" +
+                    " --checkpointSyncer.region ${S3_REGION:-}" +
+                    " --checkpointSyncer.prefix ${S3_PREFIX:-}" +
+                    " --checkpointSyncer.basePath ${CHECKPOINT_BASE_PATH:-}"
                 ],
             },
         )
