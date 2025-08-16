@@ -51,9 +51,17 @@ for ch in "${CHAINS[@]}"; do
   reg_chain_dir="/configs/registry/chains/${ch}"
   mkdir -p "${reg_chain_dir}"
 
-  cid="${IDS[$ch]:-}"
-  if [ -z "$cid" ]; then
-    echo "error: CHAIN_IDS missing id for ${ch}"; exit 1
+  echo "Detecting chainId for ${ch} via eth_chainId on ${rpc}"
+  detected_cid="$(node -e "const https=require('https');const u=process.argv[1];const req=https.request(u,{method:'POST',headers:{'content-type':'application/json'}},res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{try{const j=JSON.parse(d); if(!j || !j.result){process.exit(2)}; const n=parseInt(j.result,16); if(!Number.isFinite(n)){process.exit(3)}; console.log(n);}catch(e){process.exit(1)}})});req.on('error',()=>process.exit(1));req.write(JSON.stringify({jsonrpc:'2.0',method:'eth_chainId',params:[],id:1}));req.end();" "$rpc" || true)"
+  if [ -n "${detected_cid:-}" ]; then
+    cid="${detected_cid}"
+    echo "Using detected chainId ${cid} for ${ch}"
+  else
+    cid="${IDS[$ch]:-}"
+    if [ -z "$cid" ]; then
+      echo "error: could not detect chainId from RPC and CHAIN_IDS missing id for ${ch}"; exit 1
+    fi
+    echo "Falling back to provided chainId ${cid} for ${ch}"
   fi
 
   cat > "${reg_chain_dir}/metadata.yaml" <<EOF
