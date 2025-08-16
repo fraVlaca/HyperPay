@@ -157,7 +157,7 @@ def run(plan, args):
         }
         if cstype == "local":
             env["CHECKPOINT_SYNCER_TYPE"] = "local"
-            env["CHECKPOINT_SYNCER_PATH"] = "/configs/validator-checkpoints"
+            env["CHECKPOINT_SYNCER_PATH"] = "/data/validator-checkpoints"
         elif cstype == "s3":
             env["CHECKPOINT_SYNCER_TYPE"] = "s3"
             if "bucket" in csp:
@@ -191,11 +191,11 @@ def run(plan, args):
                 cmd = [
                     "sh",
                     "-lc",
-                    "mkdir -p /configs/validator-checkpoints && " +
+                    "mkdir -p /data/validator-checkpoints && " +
                     "/app/validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY" +
                     " --chains.$ORIGIN_CHAIN.connection.url $RPC_URL" +
                     " --checkpointSyncer.type $CHECKPOINT_SYNCER_TYPE" +
-                    " --checkpointSyncer.path ${CHECKPOINT_SYNCER_PATH:-/validator-checkpoints}" +
+                    " --checkpointSyncer.path ${CHECKPOINT_SYNCER_PATH:-/data/validator-checkpoints}" +
                     " --checkpointSyncer.bucket ${S3_BUCKET:-}" +
                     " --checkpointSyncer.region ${S3_REGION:-}" +
                     " --checkpointSyncer.prefix ${S3_PREFIX:-}" +
@@ -210,7 +210,7 @@ def run(plan, args):
         "RELAY_CHAINS": relay_chains,
         "CONFIG_FILES": "/configs/agent-config.json",
     }
-    relayer_cmd = "/app/relayer --relayChains $RELAY_CHAINS --defaultSigner.key $RELAYER_KEY --db /configs/relayer-db"
+    relayer_cmd = "/app/relayer --relayChains $RELAY_CHAINS --defaultSigner.key $RELAYER_KEY --db /data/relayer-db"
     for ch in chains:
         relayer_cmd += " --chains." + ch["name"] + ".connection.url " + ch["rpc_url"]
     if allow_local_sync:
@@ -223,7 +223,7 @@ def run(plan, args):
             files = {
                 "/configs": configs_dir,
             },
-            cmd = ["sh", "-lc", "mkdir -p /configs/relayer-db /configs/validator-checkpoints && " + relayer_cmd],
+            cmd = ["sh", "-lc", "mkdir -p /data/relayer-db /data/validator-checkpoints && " + relayer_cmd],
         ),
     )
 
