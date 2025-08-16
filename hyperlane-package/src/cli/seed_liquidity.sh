@@ -130,7 +130,7 @@ fi
 
 mkdir -p /tmp/txs
 STRATEGY_FILE="/tmp/strategy.yaml"
-echo "submitters:" > "$STRATEGY_FILE"
+: > "$STRATEGY_FILE"
 
 while read -r chain addr amount; do
   if [ -z "$chain" ] || [ -z "$addr" ] || [ -z "$amount" ]; then
@@ -139,9 +139,9 @@ while read -r chain addr amount; do
   tx_file="/tmp/txs/${chain}.json"
   printf '[{"to":"%s","value":"%s"}]\n' "$addr" "$amount" > "$tx_file"
   {
-    echo "  ${chain}:"
-    echo "    type: FILE"
-    echo "    filepath: ${tx_file}"
+    echo "${chain}:"
+    echo "  type: FILE"
+    echo "  filepath: ${tx_file}"
   } >> "$STRATEGY_FILE"
 done < /tmp/seed-plan.txt
 
