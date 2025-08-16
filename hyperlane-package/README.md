@@ -117,6 +117,28 @@ Smoke tests (manual)
   - agent-config-gen: writes /configs/agent-config.json from deployed addresses
   - Relayer: watches chains and runs; no CONFIG_FILES errors
   - Validators: start and write to /data/validator-checkpoints
+## Warp route quick test (cross-chain send)
+- Ensure your enclave is running and the TEST warp route is deployed.
+- Run a small transfer from ethereum to arbitrum using only your provided RPCs:
+
+  kurtosis service exec hyperlane hyperlane-cli "sh -lc 'hyperlane warp send --origin ethereum --destination arbitrum --symbol TEST --amount 0.0000001 -r /configs/registry -k \"$HYP_KEY\" -y'"
+
+- Inspect logs to confirm relay and execution on the destination:
+
+  kurtosis service logs hyperlane hyperlane-cli
+  kurtosis service logs hyperlane relayer
+  kurtosis service logs hyperlane validator-ethereum
+  kurtosis service logs hyperlane validator-arbitrum
+
+- You should see:
+  - The origin transaction hash printed by the CLI send command
+  - The relayer detecting the message and submitting it to the destination
+- Alternatively, you can use the helper script baked into the CLI container:
+
+  kurtosis service exec hyperlane hyperlane-cli "sh -lc 'ORIGIN=ethereum DESTINATION=arbitrum SYMBOL=TEST AMOUNT=0.0000001 /usr/local/bin/send_warp.sh'"
+
+
+  - No public RPCs in logs; only your provided RPC URLs
 
 Notes on agent-config.json generation
 - Generated inside the enclave by a one-shot container (agent-config-gen) based on your args file and any deployed addresses in /configs/addresses-*.json.
