@@ -1,0 +1,18 @@
+{
+  "asset": "ETH",
+  "topology": {
+    "sepolia": "collateral",
+    "arbSepolia": "collateral",
+    "baseSepolia": "synthetic"
+  },
+  "routers": {
+    "sepolia": "",
+    "arbSepolia": "",
+    "baseSepolia": ""
+  },
+  "domains": {
+    "sepolia": 11155111,
+    "arbSepolia": 421614,
+    "baseSepolia": 84532
+  }
+}
