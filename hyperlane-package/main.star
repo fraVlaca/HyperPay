@@ -109,25 +109,19 @@ def run(plan, args):
 
     yaml_content = "chains:\\n"
     for ch in chains:
-    files_art = plan.store_service_files(
-        files = {
-            "configs/args.yaml": yaml_content,
-            "configs/agent-config.json": "{}",
-        },
-    )
-
         name = ch["name"]
         rpc = ch["rpc_url"]
-    files_art = plan.store_service_files(
-        files = {
-            "configs/args.yaml": yaml_content,
-            "configs/agent-config.json": "{}",
-        },
-    )
-
         yaml_content += "- name: " + name + "\\n"
         yaml_content += "  rpc_url: " + rpc + "\\n"
         yaml_content += "  existing_addresses: {}\\n"
+
+    files_art = plan.store_service_files(
+        files = {
+            "configs/args.yaml": yaml_content,
+            "configs/agent-config.json": "{}",
+        },
+    )
+
     plan.add_service(
         name = "agent-config-gen",
         config = ServiceConfig(
