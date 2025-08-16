@@ -192,6 +192,7 @@ def run(plan, args):
                     "sh",
                     "-lc",
                     "/app/validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY" +
+                    " --chains.$ORIGIN_CHAIN.connection.url $RPC_URL" +
                     " --checkpointSyncer.type $CHECKPOINT_SYNCER_TYPE" +
                     " --checkpointSyncer.path ${CHECKPOINT_SYNCER_PATH:-/validator-checkpoints}" +
                     " --checkpointSyncer.bucket ${S3_BUCKET:-}" +
