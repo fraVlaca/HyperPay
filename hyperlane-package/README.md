@@ -19,6 +19,19 @@ Usage
   - kurtosis service logs hyperlane rebalancer
 
 Configuration
+Args schema overview
+- chains[]:
+  - name (string), rpc_url (string), chain_id (int), deploy_core (bool), existing_addresses (object: mailbox, igp, validatorAnnounce, ism)
+- agents:
+  - deployer: { key }
+  - relayer: { key, allow_local_checkpoint_syncers }
+  - validators[]: { chain, signing_key, checkpoint_syncer: { type: local|s3|gcs, params: {...} } }
+  - rebalancer: { key }
+- warp_routes[]:
+  - symbol, decimals, topology { chain: collateral|synthetic }, token_addresses { chain: token }, owner, rebalancer { address, policy, adapters[] }
+- global:
+  - registry_mode: local|public, agent_image_tag, cli_version
+
 - See ./config/schema.yaml for full schema
 Agent keys in args.yaml
 - agents.deployer.key: used by hyperlane-cli for core/warp operations
