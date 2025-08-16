@@ -44,14 +44,17 @@ def run(plan, args):
     rebal_db_dir = Directory(persistent_key="rebalancer-db")
 
     cli_img = ImageBuildSpec(
+        image_name = "hyperlane-cli-img",
         build_context_dir = "./src/cli",
     )
 
     rebal_img = ImageBuildSpec(
+        image_name = "rebalancer-img",
         build_context_dir = "./src/rebalancer",
     )
 
     agent_cfg_img = ImageBuildSpec(
+        image_name = "agent-config-gen-img",
         build_context_dir = "./src/tools/agent-config-gen",
     )
 
