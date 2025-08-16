@@ -184,7 +184,7 @@ def run(plan, args):
             name = svc_name,
             config = ServiceConfig(
                 image = agent_image,
-                env_vars = dict(env, CONFIG_FILES="/configs/agent-config.json"),
+                env_vars = dict(env, CONFIG_FILES="/configs/agent-config.json", RUST_LOG="debug"),
                 files = {
                     "/validator-checkpoints": val_ckpts_dir,
                     "/configs": configs_dir,
@@ -192,6 +192,7 @@ def run(plan, args):
                 cmd = [
                     "sh",
                     "-lc",
+                    "mkdir -p /validator-checkpoints && chmod -R 777 /validator-checkpoints && " +
                     "/app/validator --originChainName $ORIGIN_CHAIN --validator.key $VALIDATOR_KEY" +
                     " --chains.$ORIGIN_CHAIN.connection.url $RPC_URL" +
                     " --checkpointSyncer.type $CHECKPOINT_SYNCER_TYPE" +
@@ -219,13 +220,13 @@ def run(plan, args):
         name = "relayer",
         config = ServiceConfig(
             image = agent_image,
-            env_vars = relayer_env,
+            env_vars = dict(relayer_env, RUST_LOG="debug"),
             files = {
                 "/relayer-db": relayer_db_dir,
                 "/validator-checkpoints": val_ckpts_dir,
                 "/configs": configs_dir,
             },
-            cmd = ["sh", "-lc", relayer_cmd],
+            cmd = ["sh", "-lc", "mkdir -p /relayer-db /validator-checkpoints && chmod -R 777 /relayer-db /validator-checkpoints && " + relayer_cmd],
         ),
     )
 
