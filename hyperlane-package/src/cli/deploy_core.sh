@@ -68,13 +68,18 @@ EOF
   core_cfg="/configs/core-${ch}.yaml"
 
   echo "Initializing core config for ${ch}"
-  hyperlane core init -o "${core_cfg}" -y
+  printf "\n" | hyperlane core init -y
+  if [ -f "./configs/core-config.yaml" ]; then
+    cp "./configs/core-config.yaml" "${core_cfg}"
+  else
+    echo "error: core init did not produce ./configs/core-config.yaml"; exit 1
+  fi
 
   echo "Deploying Hyperlane core to ${ch} using local registry only"
   hyperlane core deploy --chain "${ch}" -o "${core_cfg}" -r "/configs/registry" -k "$HYP_KEY" -y
 
-  if [ -f "/home/ubuntu/.hyperlane/chains/${ch}/addresses.yaml" ]; then
-    cp "/home/ubuntu/.hyperlane/chains/${ch}/addresses.yaml" "${reg_chain_dir}/addresses.yaml" || true
+  if [ -f "$HOME/.hyperlane/chains/${ch}/addresses.yaml" ]; then
+    cp "$HOME/.hyperlane/chains/${ch}/addresses.yaml" "${reg_chain_dir}/addresses.yaml" || true
   fi
 
   touch "${stamp}"
