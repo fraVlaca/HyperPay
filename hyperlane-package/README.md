@@ -1,13 +1,13 @@
 # Hyperlane Kurtosis Package
 
-Launch Hyperlane offchain infrastructure on any EVM chain via external RPCs. Supports Warp Routes 2.0 (HWR 2.0) and a modular rebalancer (CCTP + OFT). No observability stack.
+Launch Hyperlane offchain infrastructure on any EVM chain via external RPCs. Supports Warp Routes 2.0 (HWR 2.0). No observability stack.
 
 Key features
 - Multi-chain via args.yaml (N>=2); defaults: Ethereum + Arbitrum mainnets
 - Secrets passed via args.yaml and injected into services
-- Orchestrates Hyperlane CLI for registry/core deploy and HWR 2.0 warp routes
+- Orchestrates Hyperlane CLI for core deploy and HWR 2.0 warp routes
 - Launches validator(s) and relayer; local checkpoint syncer by default (S3/GCS optional)
-- Modular rebalancer with CCTP and OFT adapters
+- No public RPC fallbacks: agents and CLI use only the RPCs you provide
 
 Usage
 - kurtosis clean -a
@@ -17,7 +17,6 @@ Usage
   - kurtosis service logs hyperlane relayer
   - kurtosis service logs hyperlane validator-ethereum
   - kurtosis service logs hyperlane validator-arbitrum
-  - kurtosis service logs hyperlane rebalancer
 
 Configuration
 Args schema overview
@@ -27,9 +26,8 @@ Args schema overview
   - deployer: { key }
   - relayer: { key, allow_local_checkpoint_syncers }
   - validators[]: { chain, signing_key, checkpoint_syncer: { type: local|s3|gcs, params: {...} } }
-  - rebalancer: { key }
 - warp_routes[]:
-  - symbol, decimals, topology { chain: collateral|synthetic }, token_addresses { chain: token }, owner, rebalancer { address, policy, adapters[] }
+  - symbol, decimals, topology { chain: collateral|synthetic }, token_addresses { chain: token }, owner
 - global:
   - registry_mode: local|public, agent_image_tag, cli_version
 
@@ -38,7 +36,6 @@ Agent keys in args.yaml
 - agents.deployer.key: used by hyperlane-cli for core/warp operations
 - agents.relayer.key: used by relayer
 - agents.validators[].signing_key: per-chain validators
-- agents.rebalancer.key: used by rebalancer service when executing transfers via adapters
 
 - Default example: ./config/config.yaml
 
@@ -52,11 +49,11 @@ Local override example (do not commit)
     - name: ethereum
       rpc_url: https://65d1c7945fa54cfe8325e61562fe97f3-rpc.network.bloctopus.io/
       chain_id: 1
-      deploy_core: false
+      deploy_core: true
     - name: arbitrum
       rpc_url: https://d88be824605745c0a09b1111da4727fd-rpc.network.bloctopus.io/
       chain_id: 42161
-      deploy_core: false
+      deploy_core: true
 
   agents:
     deployer:
@@ -71,13 +68,17 @@ Local override example (do not commit)
       - chain: arbitrum
         signing_key: 0xYOUR_PRIVATE_KEY
         checkpoint_syncer: { type: local, params: { path: /validator-checkpoints } }
-    rebalancer:
-      key: 0xYOUR_PRIVATE_KEY
 
-  warp_routes: []
+  warp_routes:
+    - symbol: TEST
+      decimals: 18
+      topology:
+        ethereum: collateral
+        arbitrum: synthetic
+      owner: 0xOWNER_EOA
 
   global:
-    registry_mode: public
+    registry_mode: local
     agent_image_tag: agents-v1.4.0
     cli_version: latest
 
@@ -86,34 +87,17 @@ Run with:
 - kurtosis run --enclave hyperlane ./hyperlane-package --args-file ~/local.args.yaml
 
 Warp routes (HWR 2.0) example snippet
-- Configure a simple USDC route between Ethereum (collateral) and Arbitrum (synthetic):
+- Configure a simple test route between Ethereum (collateral) and Arbitrum (synthetic):
   warp_routes:
-    - symbol: USDC
-      decimals: 6
+    - symbol: TEST
+      decimals: 18
       topology:
         ethereum: collateral
         arbitrum: synthetic
-      token_addresses:
-        ethereum: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
       owner: 0xOWNER_EOA
-      rebalancer:
-        address: 0xREBALANCER_EOA
-        policy:
-          low_watermark_pct: 0.30
-          high_watermark_pct: 0.60
-          min_rebalance_amount: "5000"
-        adapters:
-          - type: cctp
-            params:
-              circle_domain_ids:
-                ethereum: 0
-                arbitrum: 110
-
-Rebalancer adapter selection
-- Default adapter is CCTP; set REBALANCER_ADAPTER=oft in args if you intend to use an OFT route.
 
 Checkpoint syncers
-- Local (default): validators write to /validator-checkpoints (shared Kurtosis volume).
+- Local (default): validators write to /data/validator-checkpoints (container-local path).
 - S3: set agents.validators[].checkpoint_syncer to:
     type: s3
     params: { bucket: YOUR_BUCKET, region: YOUR_REGION, prefix: optional/prefix, basePath: optionalBasePath }
@@ -122,18 +106,17 @@ Checkpoint syncers
     params: { bucket: YOUR_BUCKET, prefix: optional/prefix, basePath: optionalBasePath }
 
 Notes
-- Adapters are placeholders; supply appropriate params and fund the rebalancer key when moving real value.
-- With deploy_core=false (default), ensure existing_addresses are set or rely on the public registry.
+- With deploy_core=true, the CLI deploys core and writes addresses into /configs/addresses-<chain>.json.
+- agent-config.json is generated from those deployed artifacts; no public registry lookups are used.
 - Provide valid RPC URLs and funded keys. Defaults use mainnets; switch to testnets by editing config.yaml.
 
 Smoke tests (manual)
 - Start the enclave and check:
-  - hyperlane-cli: core/warp steps execute or skip with stamps in /configs
-  - agent-config-gen: writes /configs/agent-config.json
+  - hyperlane-cli: core deploy writes addresses-*.json; warp init/deploy stamps
+  - agent-config-gen: writes /configs/agent-config.json from deployed addresses
   - Relayer: watches chains and runs; no CONFIG_FILES errors
-  - Validators: start and write to /validator-checkpoints or cloud syncer
-  - Rebalancer: HTTP 200 at / (ok response)
+  - Validators: start and write to /data/validator-checkpoints
 
 Notes on agent-config.json generation
-- Generated inside the enclave by a one-shot container (agent-config-gen) based on your args file and any existing_addresses provided.
-- If you set deploy_core: true, the CLI outputs can be parsed in a future step to automatically populate agent-config.
+- Generated inside the enclave by a one-shot container (agent-config-gen) based on your args file and any deployed addresses in /configs/addresses-*.json.
+- Public registry fallback is disabled; ensure deploy_core=true or provide existing_addresses when deploy_core=false.

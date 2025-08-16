@@ -35,16 +35,14 @@ for ch in "${CHAINS[@]}"; do
 
   rpc="${RPCS[$ch]:-}"
   if [ -z "$rpc" ]; then
-    echo "warning: no RPC provided for chain ${ch}; CLI may rely on registry/public config"
+    echo "error: no RPC provided for chain ${ch}"; exit 1
   fi
 
-  echo "Deploying Hyperlane core to ${ch} (registry_mode=${REGISTRY_MODE:-public})"
-  hyperlane core init --chain "${ch}" --registry "${REGISTRY_MODE:-public}"
-  if [ -n "$rpc" ]; then
-    hyperlane core deploy --chain "${ch}" --key "$HYP_KEY" --rpcUrl "$rpc"
-  else
-    hyperlane core deploy --chain "${ch}" --key "$HYP_KEY"
-  fi
+  echo "Deploying Hyperlane core to ${ch} (registry_mode=${REGISTRY_MODE:-local})"
+  hyperlane core init --chain "${ch}" --registry "${REGISTRY_MODE:-local}"
+  hyperlane core deploy --chain "${ch}" --key "$HYP_KEY" --rpcUrl "$rpc"
+  hyperlane core addresses --chain "${ch}" --rpcUrl "$rpc" > "/configs/addresses-${ch}.json" || true
+
   touch "${stamp}"
 done
 

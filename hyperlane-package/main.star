@@ -41,17 +41,12 @@ def run(plan, args):
     configs_dir = Directory(persistent_key="configs")
     val_ckpts_dir = Directory(persistent_key="validator-checkpoints")
     relayer_db_dir = Directory(persistent_key="relayer-db")
-    rebal_db_dir = Directory(persistent_key="rebalancer-db")
 
     cli_img = ImageBuildSpec(
         image_name = "hyperlane-cli-img",
         build_context_dir = "./src/cli",
     )
 
-    rebal_img = ImageBuildSpec(
-        image_name = "rebalancer-img",
-        build_context_dir = "./src/rebalancer",
-    )
 
     agent_cfg_img = ImageBuildSpec(
         image_name = "agent-config-gen-img",
@@ -227,21 +222,5 @@ def run(plan, args):
         ),
     )
 
-    if len(warp_routes) > 0:
-        plan.add_service(
-            name = "rebalancer",
-            config = ServiceConfig(
-                image = rebal_img,
-                env_vars = {
-                    "PORT": "8080",
-                    "REBALANCER_KEY": str(rebalancer_key),
-                },
-                files = {
-                    "/rebalancer-db": rebal_db_dir,
-                    "/configs": configs_dir,
-                },
-                ports = {"http": PortSpec(8080)},
-            ),
-        )
 
     return None
