@@ -8,11 +8,18 @@ fi
 mkdir -p /configs
 
 route_symbol="${ROUTE_SYMBOL:-route}"
+
+if [ -z "${HYP_KEY:-}" ]; then
+  echo "HYP_KEY not set (agents.deployer.key). Required for warp route operations."; exit 1
+fi
+
 stamp="/configs/.done-warp-${route_symbol}"
 if [ -f "${stamp}" ]; then
   echo "warp route ${route_symbol} already configured, skipping"
 else
-  echo "would configure warp route ${route_symbol} here via hyperlane CLI"
+  echo "Configuring warp route ${route_symbol}"
+  echo "hyperlane warp init --symbol ${route_symbol}"
+  echo "hyperlane warp deploy --symbol ${route_symbol} --key \$HYP_KEY"
   touch "${stamp}"
 fi
 

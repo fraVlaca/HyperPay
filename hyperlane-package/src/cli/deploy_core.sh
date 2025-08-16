@@ -7,14 +7,25 @@ fi
 
 mkdir -p /configs
 
-IFS=',' read -r -a CHAINS <<< "${CHAIN_NAMES:-}"
+if [ -z "${CHAIN_NAMES:-}" ]; then
+  echo "CHAIN_NAMES not set"; exit 1
+fi
+
+if [ -z "${HYP_KEY:-}" ]; then
+  echo "HYP_KEY not set (agents.deployer.key). Required for core deployment."; exit 1
+fi
+
+IFS=',' read -r -a CHAINS <<< "${CHAIN_NAMES}"
 for ch in "${CHAINS[@]}"; do
   stamp="/configs/.done-core-${ch}"
   if [ -f "${stamp}" ]; then
     echo "core already deployed for ${ch}, skipping"
     continue
   fi
-  echo "would deploy core for ${ch} here via hyperlane CLI"
+
+  echo "Deploying Hyperlane core to ${ch} (registry_mode=${REGISTRY_MODE:-public})"
+  echo "hyperlane core init --chain ${ch} --registry ${REGISTRY_MODE:-public}"
+  echo "hyperlane core deploy --chain ${ch} --key \$HYP_KEY"
   touch "${stamp}"
 done
 
