@@ -63,6 +63,10 @@ chainId: ${cid}
 domainId: ${cid}
 rpcUrls:
   - http: ${rpc}
+nativeToken:
+  name: Ether
+  symbol: ETH
+  decimals: 18
 EOF
 
   core_cfg="/configs/core-${ch}.yaml"
