@@ -115,11 +115,13 @@ def run(plan, args):
         yaml_content += "  rpc_url: " + rpc + "\\n"
         yaml_content += "  existing_addresses: {}\\n"
 
-    files_art = plan.store_service_files(
-        files = {
-            "configs/args.yaml": yaml_content,
-            "configs/agent-config.json": "{}",
+    files_art = plan.render_templates(
+        config = {
+            "/configs/args.yaml": struct(template=yaml_content, data=struct()),
+            "/configs/agent-config.json": struct(template="{}", data=struct()),
         },
+        name = "agent-config-seed",
+        description = "seed args.yaml and agent-config.json",
     )
 
     plan.add_service(
@@ -204,7 +206,7 @@ def run(plan, args):
         "RELAY_CHAINS": relay_chains,
         "CONFIG_FILES": "/configs/agent-config.json",
     }
-    relayer_cmd = "hyperlane-relayer --relayChains $RELAY_CHAINS --defaultSigner.key $RELAYER_KEY --db /relayer-db"
+    relayer_cmd = "relayer --relayChains $RELAY_CHAINS --defaultSigner.key $RELAYER_KEY --db /relayer-db"
     if allow_local_sync:
         relayer_cmd += " --allowLocalCheckpointSyncers true"
     plan.add_service(
@@ -217,7 +219,7 @@ def run(plan, args):
                 "/relayer-db": relayer_db_dir,
                 "/validator-checkpoints": val_ckpts_dir,
             },
-            cmd = ["sh", "-lc", relayer_cmd.replace("hyperlane-relayer", "relayer")],
+            cmd = ["sh", "-lc", relayer_cmd],
         ),
     )
 
