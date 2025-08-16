@@ -88,7 +88,34 @@ EOF
   fi
 
   echo "Deploying Hyperlane core to ${ch} using local registry only"
-  hyperlane core deploy --chain "${ch}" -o "${core_cfg}" -r "/configs/registry" -k "$HYP_KEY" -y
+  
+  # Retry deployment up to 3 times on nonce errors
+  max_retries=3
+  retry_count=0
+  deployment_success=false
+  
+  while [ $retry_count -lt $max_retries ] && [ "$deployment_success" = "false" ]; do
+    if hyperlane core deploy --chain "${ch}" -o "${core_cfg}" -r "/configs/registry" -k "$HYP_KEY" -y 2>&1 | tee /tmp/deploy-${ch}.log; then
+      deployment_success=true
+      echo "Successfully deployed core contracts to ${ch}"
+    else
+      if grep -q "nonce has already been used\|nonce too low" /tmp/deploy-${ch}.log; then
+        retry_count=$((retry_count + 1))
+        echo "Nonce error detected, retrying deployment (attempt $retry_count of $max_retries)..."
+        # Wait a bit before retrying to allow pending transactions to settle
+        sleep 5
+      else
+        echo "Deployment failed with non-nonce error, exiting"
+        cat /tmp/deploy-${ch}.log
+        exit 1
+      fi
+    fi
+  done
+  
+  if [ "$deployment_success" = "false" ]; then
+    echo "Failed to deploy after $max_retries attempts"
+    exit 1
+  fi
 
   if [ -f "$HOME/.hyperlane/chains/${ch}/addresses.yaml" ]; then
     cp "$HOME/.hyperlane/chains/${ch}/addresses.yaml" "${reg_chain_dir}/addresses.yaml" || true
