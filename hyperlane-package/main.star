@@ -146,10 +146,14 @@ def run(plan, args):
         cstype = cs["type"]
         csp = _get(cs, "params", {})
         svc_name = "validator-" + vchain
+        rpc_url = ""
+        for ch2 in chains:
+            if ch2["name"] == vchain:
+                rpc_url = ch2["rpc_url"]
         env = {
             "VALIDATOR_KEY": vkey,
             "ORIGIN_CHAIN": vchain,
-            "CONFIG_FILES": "/configs/agent-config.json",
+            "RPC_URL": rpc_url,
         }
         if cstype == "local":
             env["CHECKPOINT_SYNCER_TYPE"] = "local"
@@ -183,7 +187,6 @@ def run(plan, args):
                 env_vars = env,
                 files = {
                     "/validator-checkpoints": val_ckpts_dir,
-                    "/configs": configs_dir,
                 },
                 cmd = [
                     "sh",
@@ -203,9 +206,10 @@ def run(plan, args):
         "RELAYER_KEY": relayer_key,
         "ALLOW_LOCAL": "true" if allow_local_sync else "false",
         "RELAY_CHAINS": relay_chains,
-        "CONFIG_FILES": "/configs/agent-config.json",
     }
     relayer_cmd = "/app/relayer --relayChains $RELAY_CHAINS --defaultSigner.key $RELAYER_KEY --db /relayer-db"
+    for ch in chains:
+        relayer_cmd += " --chains." + ch["name"] + ".connection.url " + ch["rpc_url"]
     if allow_local_sync:
         relayer_cmd += " --allowLocalCheckpointSyncers true"
     plan.add_service(
@@ -214,7 +218,6 @@ def run(plan, args):
             image = agent_image,
             env_vars = relayer_env,
             files = {
-                "/configs": configs_dir,
                 "/relayer-db": relayer_db_dir,
                 "/validator-checkpoints": val_ckpts_dir,
             },
