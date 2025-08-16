@@ -29,6 +29,33 @@ Agent keys in args.yaml
 - Default example: ./config/config.yaml
 
 Providing RPCs and secrets
+Warp routes (HWR 2.0) example snippet
+- Configure a simple USDC route between Ethereum (collateral) and Arbitrum (synthetic):
+  warp_routes:
+    - symbol: USDC
+      decimals: 6
+      topology:
+        ethereum: collateral
+        arbitrum: synthetic
+      token_addresses:
+        ethereum: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+      owner: 0xOWNER_EOA
+      rebalancer:
+        address: 0xREBALANCER_EOA
+        policy:
+          low_watermark_pct: 0.30
+          high_watermark_pct: 0.60
+          min_rebalance_amount: "5000"
+        adapters:
+          - type: cctp
+            params:
+              circle_domain_ids:
+                ethereum: 0
+                arbitrum: 110
+
+Rebalancer adapter selection
+- Default adapter is CCTP; set REBALANCER_ADAPTER=oft in args if you intend to use an OFT route.
+- Adapters are placeholders; you must supply appropriate params and fund the rebalancer key when moving real value.
 - Edit ./config/config.yaml (or create your own and pass via --args-file)
 - Set per-chain rpc_url values to your providers (e.g., Alchemy/Infura)
 - Set agent keys:
