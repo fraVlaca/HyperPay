@@ -114,5 +114,30 @@ while read -r chain addr amount; do
   if [ -z "$chain" ] || [ -z "$addr" ] || [ -z "$amount" ]; then
     continue
   fi
-  hyperlane submit --chain "$chain" --to "$addr" --value "$amount" -r "$REGISTRY_DIR" -y
+
+  tx_file="/tmp/txs-${chain}.json"
+  strat_file="/tmp/strategy-${chain}.yaml"
+
+  printf '[{"to":"%s","value":"%s"}]\n' "$addr" "$amount" > "$tx_file"
+
+  {
+    echo "submitters:"
+    echo "  ${chain}:"
+    echo "    type: FILE"
+    echo "    filepath: ${tx_file}"
+  } > "$strat_file"
+
+  set +e
+  hyperlane submit \
+    --chain "$chain" \
+    --transactions "$tx_file" \
+    --strategy "$strat_file" \
+    -r "$REGISTRY_DIR" \
+    -y
+  rc=$?
+  set -e
+
+  if [ $rc -ne 0 ]; then
+    hyperlane submit --chain "$chain" --to "$addr" --value "$amount" -r "$REGISTRY_DIR" -y
+  fi
 done < /tmp/seed-plan.txt
