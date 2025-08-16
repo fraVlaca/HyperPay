@@ -13,6 +13,7 @@ Usage
 - kurtosis clean -a
 - kurtosis run --enclave hyperlane ./hyperlane-package --args-file ./hyperlane-package/config/config.yaml
 - View logs:
+  - kurtosis service logs hyperlane hyperlane-cli
   - kurtosis service logs hyperlane relayer
   - kurtosis service logs hyperlane validator-ethereum
   - kurtosis service logs hyperlane validator-arbitrum
@@ -42,6 +43,48 @@ Agent keys in args.yaml
 - Default example: ./config/config.yaml
 
 Providing RPCs and secrets
+- rpc_url values are consumed by the CLI service via CHAIN_RPCS. No chain containers are started; only your external RPCs are used.
+- Do not commit secrets. Create a local override file and pass it with --args-file.
+
+Local override example (do not commit)
+- Save this as ~/local.args.yaml and customize keys:
+  chains:
+    - name: ethereum
+      rpc_url: https://65d1c7945fa54cfe8325e61562fe97f3-rpc.network.bloctopus.io/
+      chain_id: 1
+      deploy_core: false
+    - name: arbitrum
+      rpc_url: https://d88be824605745c0a09b1111da4727fd-rpc.network.bloctopus.io/
+      chain_id: 42161
+      deploy_core: false
+
+  agents:
+    deployer:
+      key: 0xYOUR_PRIVATE_KEY
+    relayer:
+      key: 0xYOUR_PRIVATE_KEY
+      allow_local_checkpoint_syncers: true
+    validators:
+      - chain: ethereum
+        signing_key: 0xYOUR_PRIVATE_KEY
+        checkpoint_syncer: { type: local, params: { path: /validator-checkpoints } }
+      - chain: arbitrum
+        signing_key: 0xYOUR_PRIVATE_KEY
+        checkpoint_syncer: { type: local, params: { path: /validator-checkpoints } }
+    rebalancer:
+      key: 0xYOUR_PRIVATE_KEY
+
+  warp_routes: []
+
+  global:
+    registry_mode: public
+    agent_image_tag: agents-v1.4.0
+    cli_version: latest
+
+Run with:
+- kurtosis clean -a
+- kurtosis run --enclave hyperlane ./hyperlane-package --args-file ~/local.args.yaml
+
 Warp routes (HWR 2.0) example snippet
 - Configure a simple USDC route between Ethereum (collateral) and Arbitrum (synthetic):
   warp_routes:
@@ -68,6 +111,7 @@ Warp routes (HWR 2.0) example snippet
 
 Rebalancer adapter selection
 - Default adapter is CCTP; set REBALANCER_ADAPTER=oft in args if you intend to use an OFT route.
+
 Checkpoint syncers
 - Local (default): validators write to /validator-checkpoints (shared Kurtosis volume).
 - S3: set agents.validators[].checkpoint_syncer to:
@@ -77,31 +121,19 @@ Checkpoint syncers
     type: gcs
     params: { bucket: YOUR_BUCKET, prefix: optional/prefix, basePath: optionalBasePath }
 
-- Adapters are placeholders; you must supply appropriate params and fund the rebalancer key when moving real value.
-- Edit ./config/config.yaml (or create your own and pass via --args-file)
-- Set per-chain rpc_url values to your providers (e.g., Alchemy/Infura)
-- Set agent keys:
-  - agents.relayer.key: 0x-prefixed private key for relayer
-  - agents.validators[].signing_key: per-chain validator private keys
-- Optional: configure S3/GCS checkpoint syncers by switching type and providing params
+Notes
+- Adapters are placeholders; supply appropriate params and fund the rebalancer key when moving real value.
+- With deploy_core=false (default), ensure existing_addresses are set or rely on the public registry.
+- Provide valid RPC URLs and funded keys. Defaults use mainnets; switch to testnets by editing config.yaml.
 
 Smoke tests (manual)
-- With deploy_core=false (default), ensure existing_addresses are set in your args or that the public registry is sufficient for your needs
 - Start the enclave and check:
-  - Relayer: reports watching chains and running; no missing CONFIG_FILES errors
-  - Validators: start and write to /validator-checkpoints
+  - hyperlane-cli: core/warp steps execute or skip with stamps in /configs
+  - agent-config-gen: writes /configs/agent-config.json
+  - Relayer: watches chains and runs; no CONFIG_FILES errors
+  - Validators: start and write to /validator-checkpoints or cloud syncer
   - Rebalancer: HTTP 200 at / (ok response)
-- Optional: once CLI wiring is complete, run a hello-world Hyperlane message or a warp route send
 
-Status (milestone 1)
-- Scaffolded package structure and images
-- Validators and relayer services are wired; rebalancer scaffold (CCTP+OFT) included
 Notes on agent-config.json generation
-- The agent-config is generated inside the enclave by a one-shot container (agent-config-gen) based on your args file and any existing_addresses provided.
-- If you set deploy_core: true, the hyperlane-cli service will later be wired to write deployed addresses to /configs, and the generator will be extended to include them automatically.
-
-- Next: wire hyperlane-cli steps (core deploy + warp routes) and generate /configs/agent-config.json from args/deploy outputs
-
-Notes
-- Provide valid RPC URLs and funded keys where required
-- Defaults use mainnets; switch to testnets by editing config.yaml
+- Generated inside the enclave by a one-shot container (agent-config-gen) based on your args file and any existing_addresses provided.
+- If you set deploy_core: true, the CLI outputs can be parsed in a future step to automatically populate agent-config.
