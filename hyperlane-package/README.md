@@ -47,6 +47,10 @@ Smoke tests (manual)
 Status (milestone 1)
 - Scaffolded package structure and images
 - Validators and relayer services are wired; rebalancer scaffold (CCTP+OFT) included
+Notes on agent-config.json generation
+- The agent-config is generated inside the enclave by a one-shot container (agent-config-gen) based on your args file and any existing_addresses provided.
+- If you set deploy_core: true, the hyperlane-cli service will later be wired to write deployed addresses to /configs, and the generator will be extended to include them automatically.
+
 - Next: wire hyperlane-cli steps (core deploy + warp routes) and generate /configs/agent-config.json from args/deploy outputs
 
 Notes
