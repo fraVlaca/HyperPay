@@ -10,37 +10,84 @@ export type LastSelection = {
   amount?: string;
 };
 
-export async function loadRegistry(): Promise<UnifiedRegistry> {
-  const url = process.env.NEXT_PUBLIC_HYPERLANE_REGISTRY_URL;
-  if (!url) return REGISTRY_SAMPLE;
-
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return REGISTRY_SAMPLE;
-    const remote = (await res.json()) as UnifiedRegistry;
-    const merged: UnifiedRegistry = {
-      chains: dedupeBy(
-        [...REGISTRY_SAMPLE.chains, ...remote.chains],
-        (c) => c.key
-      ),
-      tokens: dedupeBy(
-        [...REGISTRY_SAMPLE.tokens, ...remote.tokens],
-        (t) => t.symbol
-      ),
-      routes: [...REGISTRY_SAMPLE.routes, ...remote.routes]
-    };
-    return merged;
-  } catch {
-    return REGISTRY_SAMPLE;
-  }
-}
-
 function dedupeBy<T>(arr: T[], key: (v: T) => string) {
   const m = new Map<string, T>();
   for (const v of arr) {
     m.set(key(v), v);
   }
   return [...m.values()];
+}
+
+async function tryFetch(url?: string): Promise<any | null> {
+  if (!url) return null;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function loadRegistry(): Promise<UnifiedRegistry> {
+  let merged: UnifiedRegistry = {
+    chains: [...REGISTRY_SAMPLE.chains],
+    tokens: [...REGISTRY_SAMPLE.tokens],
+    routes: [...REGISTRY_SAMPLE.routes]
+  };
+
+  const remote = (await tryFetch(process.env.NEXT_PUBLIC_HYPERLANE_REGISTRY_URL)) as UnifiedRegistry | null;
+  if (remote) {
+    merged = {
+      chains: dedupeBy([...merged.chains, ...(remote.chains || [])], (c) => c.key),
+      tokens: dedupeBy([...merged.tokens, ...(remote.tokens || [])], (t) => t.symbol),
+      routes: [...merged.routes, ...(remote.routes || [])]
+    };
+  }
+
+  const artifactUrl = process.env.NEXT_PUBLIC_REGISTRY_JSON_URL;
+  const artifact = await tryFetch(artifactUrl);
+  if (artifact) {
+    const chainsFromArtifact = Array.isArray(artifact.chains)
+      ? artifact.chains
+      : artifact.chains
+      ? Object.entries(artifact.chains).map(([key, v]: any) => ({
+          key,
+          chainId: v.evmChainId,
+          name: v.displayName || key
+        }))
+      : [];
+    merged = {
+      chains: dedupeBy([...merged.chains, ...chainsFromArtifact], (c) => c.key),
+      tokens: [...merged.tokens],
+      routes: [...merged.routes, ...(artifact.routes || [])]
+    };
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const local = window.localStorage.getItem("bridgeRegistryArtifact");
+      if (local) {
+        const j = JSON.parse(local);
+        const chainsFromLocal = Array.isArray(j.chains)
+          ? j.chains
+          : j.chains
+          ? Object.entries(j.chains).map(([key, v]: any) => ({
+              key,
+              chainId: v.evmChainId,
+              name: v.displayName || key
+            }))
+          : [];
+        merged = {
+          chains: dedupeBy([...merged.chains, ...chainsFromLocal], (c) => c.key),
+          tokens: [...merged.tokens],
+          routes: [...merged.routes, ...(j.routes || [])]
+        };
+      }
+    } catch {}
+  }
+
+  return merged;
 }
 
 export function saveLastSelection(sel: LastSelection) {

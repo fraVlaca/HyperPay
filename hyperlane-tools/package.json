@@ -1,0 +1,20 @@
+{
+  "name": "hyperlane-tools",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "extend": "tsx src/extend-multicollateral.ts",
+    "deploy:oft:native": "tsx src/deploy-oft-native.ts",
+    "registry:build": "tsx src/build-registry.ts"
+  },
+  "dependencies": {
+    "viem": "^2.21.15"
+  },
+  "devDependencies": {
+    "tsx": "^4.15.7",
+    "typescript": "^5.5.4",
+    "@types/node": "^22.7.5"
+  }
+}

@@ -1,2 +1,26 @@
 # HyperPay
+
+## Hyperlane tools (HWR 2.0 + OFT deploy helpers)
+
+A minimal TS toolkit to:
+- Generate HWR 2.0 multi-collateral warp-route-deployment.yaml and optionally deploy/read via Hyperlane CLI.
+- Emit artifacts for OFT Native ETH adapters (Sepolia ↔ Arbitrum Sepolia) and HWR routes, then build a merged registry JSON for the UI.
+
+Location: `hyperlane-tools/`
+
+Quickstart:
+- `cd hyperlane-tools`
+- `pnpm i` (or `npm i`)
+- Generate HWR config (dry-run): `pnpm extend -- --config ./samples/sepolia-triangle.json`
+- Build registry (after producing artifacts): `pnpm registry:build`
+
+Native OFT adapters (wiring peers and emitting artifact):
+- Prepare input JSON with EIDs and RPCs; export already-deployed adapter addresses via env:
+  - `OFT_NATIVE_SEPOLIA=0x... OFT_NATIVE_ARBSEPOLIA=0x... pnpm deploy:oft:native -- --config ./samples/oft-native.json`
+- This writes `artifacts/oft-native.eth.sepolia-arbSepolia.json` and you can then run `pnpm registry:build` to merge.
+
+Point the UI:
+- Host `hyperlane-tools/out/registry.artifact.json` and set `bridge-ui/.env.local` → `NEXT_PUBLIC_REGISTRY_JSON_URL=https://.../registry.artifact.json`
+- Or copy its JSON into `localStorage.bridgeRegistryArtifact`
+
 A unified bridge UI lives in ./bridge-ui. It routes between Hyperlane Warp Routes (incl. 2.0) and LayerZero OFT based on config.

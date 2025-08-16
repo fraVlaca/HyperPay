@@ -1,0 +1,10 @@
+{
+  "token": { "symbol": "ETH", "decimals": 18 },
+  "chains": {
+    "sepolia": { "rpcUrl": "", "eid": 40161 },
+    "arbSepolia": { "rpcUrl": "", "eid": 40231 }
+  },
+  "deployer": { "privateKey": "" },
+  "out": "./artifacts/oft-native.eth.sepolia-arbSepolia.json",
+  "dryRun": false
+}

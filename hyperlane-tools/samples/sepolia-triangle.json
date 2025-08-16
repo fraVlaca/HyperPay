@@ -1,0 +1,11 @@
+{
+  "token": { "symbol": "ETH", "decimals": 18 },
+  "collaterals": ["sepolia", "arbSepolia"],
+  "synthetic": "baseSepolia",
+  "chains": {
+    "sepolia": { "evmChainId": 11155111, "hyperlaneDomain": 11155111 },
+    "arbSepolia": { "evmChainId": 421614, "hyperlaneDomain": 421614 },
+    "baseSepolia": { "evmChainId": 84532, "hyperlaneDomain": 84532 }
+  },
+  "owner": ""
+}

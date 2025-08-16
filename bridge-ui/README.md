@@ -51,3 +51,16 @@ The OFT panel uses `@layerzerolabs/ui-bridge-oft`. After installing dependencies
 - `start` run prod server
 - `lint` lint
 - `typecheck` TypeScript check
+## Testnet wiring: Sepolia triangle (Native ETH OFT + HWR 2.0)
+
+- OFT (LayerZero v2, Native ETH): Ethereum Sepolia ↔ Arbitrum Sepolia
+- HWR 2.0 (Hyperlane): {Sepolia, Arb Sepolia} → Base Sepolia (synthetic)
+
+Artifacts flow:
+- Use `hyperlane-tools` to produce artifacts in `hyperlane-tools/artifacts/` and a merged registry at `hyperlane-tools/out/registry.artifact.json`
+- Serve the merged registry via URL and set `NEXT_PUBLIC_REGISTRY_JSON_URL`, or paste its JSON into `localStorage.bridgeRegistryArtifact`
+
+Env:
+- `NEXT_PUBLIC_WALLET_CONNECT_ID` required for wallet connectors
+- `NEXT_PUBLIC_OFT_API_BASE` optional (defaults to https://api.layerzero.app/oft)
+- `NEXT_PUBLIC_REGISTRY_JSON_URL` optional to load generated registry
