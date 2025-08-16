@@ -1,33 +1,20 @@
-token: PYUSD
-decimals: 6
-type: multiCollateral
-chains:
-  - chainName: ethereum
-    domain: 1
-    type: EvmHypCollateral
-    token:
-      name: PYUSD
-      symbol: PYUSD
-      decimals: 6
-      address: "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8"
-  - chainName: arbitrum
-    domain: 42161
-    type: EvmHypCollateral
-    token:
-      name: PYUSD
-      symbol: PYUSD
-      decimals: 6
-      address: "0x46850aD61C2B7d64d08c9C754F45254596696984"
-  - chainName: optimism
-    domain: 10
-    type: EvmHypSynthetic
-    token:
-      name: PYUSD
-      symbol: PYUSD
-      decimals: 6
-      address: "0xF22D143c389d5f9Ac231Ae68eF9A556393571469"
-connections:
-  - from: ethereum
-    to: optimism
-  - from: arbitrum
-    to: optimism
+ethereum:
+  type: collateral
+  address: "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8"
+  token: "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8"
+  mailbox: "0xc005dc82818d67AF737725bD4bf75435d065D239"
+  symbol: PYUSD
+  decimals: 6
+arbitrum:
+  type: collateral
+  address: "0x46850aD61C2B7d64d08c9C754F45254596696984"
+  token: "0x46850aD61C2B7d64d08c9C754F45254596696984"
+  mailbox: "0x979Ca5202784112f4738403dBec5D0F3B9daabB9"
+  symbol: PYUSD
+  decimals: 6
+optimism:
+  type: synthetic
+  address: "0xF22D143c389d5f9Ac231Ae68eF9A556393571469"
+  mailbox: "0xd4C1905BB1D26BC93DAC913e13CaCC278CdCC80D"
+  symbol: PYUSD
+  decimals: 6

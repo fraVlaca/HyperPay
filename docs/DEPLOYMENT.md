@@ -57,6 +57,21 @@ Canonical Tokens
 6) LayerZero (ETH ↔ ARB) for PYUSD
 - Use LayerZero OFT adapter addresses for PYUSD on Ethereum/Arbitrum.
 - Perform a small send ETH→ARB and back. Record tx hashes and post-transfer balances.
+8) Alternative: Deploy via Hyperlane wizard
+- Export env:
+  HYP_KEY=&lt;your_private_key&gt;
+  ETHEREUM_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk
+  OPTIMISM_RPC_URL=https://opt-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk
+  ARBITRUM_RPC_URL=https://arb-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk
+- Run: npx @hyperlane-xyz/cli@latest warp deploy --wizard
+- Prompts:
+  • ERC20 (not NFT)
+  • Multi-collateral → Synthetic
+  • ethereum: collateral, token 0x6c3ea9036406852006290770BEdFcAbA0e23A0e8
+  • arbitrum: collateral, token 0x46850aD61C2B7d64d08c9C754F45254596696984
+  • optimism: synthetic, token 0xF22D143c389d5f9Ac231Ae68eF9A556393571469
+  • Symbol PYUSD, Decimals 6, Owner = your EOA, ISM/Hook = none
+- After deploy: npx @hyperlane-xyz/cli warp read --symbol PYUSD and record routers
 - Keep artifacts and verification notes in docs/test-logs.
 
 7) Testing notes
