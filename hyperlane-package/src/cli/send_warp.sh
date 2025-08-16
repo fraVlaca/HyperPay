@@ -8,7 +8,8 @@ fi
 ORIGIN="${ORIGIN:-ethereum}"
 DESTINATION="${DESTINATION:-arbitrum}"
 REGISTRY_DIR="${REGISTRY_DIR:-/configs/registry}"
-WARP_FILE="${WARP_FILE:-/configs/registry/deployments/warp_routes/ETH/arbitrum-ethereum-config.yaml}"
+WARP_FILE="${WARP_FILE:-}"
+SYMBOL="${SYMBOL:-TEST}"
 AMOUNT="${AMOUNT:-1}"
 
 if [ -z "${HYP_KEY:-}" ]; then
@@ -16,12 +17,24 @@ if [ -z "${HYP_KEY:-}" ]; then
   exit 1
 fi
 
-echo "Sending $AMOUNT wei via warp file $WARP_FILE from $ORIGIN to $DESTINATION using registry at $REGISTRY_DIR"
-hyperlane warp send \
-  --origin "$ORIGIN" \
-  --destination "$DESTINATION" \
-  --warp "$WARP_FILE" \
-  --amount "$AMOUNT" \
-  --relay \
-  -r "$REGISTRY_DIR" \
-  -y
+if [ -n "$WARP_FILE" ] && [ -f "$WARP_FILE" ]; then
+  echo "Sending $AMOUNT wei via warp file $WARP_FILE from $ORIGIN to $DESTINATION using registry at $REGISTRY_DIR"
+  hyperlane warp send \
+    --origin "$ORIGIN" \
+    --destination "$DESTINATION" \
+    --warp "$WARP_FILE" \
+    --amount "$AMOUNT" \
+    --relay \
+    -r "$REGISTRY_DIR" \
+    -y
+else
+  echo "Sending $AMOUNT wei via symbol $SYMBOL from $ORIGIN to $DESTINATION using registry at $REGISTRY_DIR"
+  hyperlane warp send \
+    --origin "$ORIGIN" \
+    --destination "$DESTINATION" \
+    --symbol "$SYMBOL" \
+    --amount "$AMOUNT" \
+    --relay \
+    -r "$REGISTRY_DIR" \
+    -y
+fi

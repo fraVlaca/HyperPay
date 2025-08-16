@@ -52,10 +52,19 @@ fi
 set -e
 
 if [ $READ_RC -ne 0 ]; then
+  if [ -n "$SYMBOL" ]; then
+    set +e
+    hyperlane warp read --symbol "$SYMBOL" -r "$REGISTRY_DIR" -y --log json > "$TMP_OUT"
+    READ_RC=$?
+    set -e
+  fi
+fi
+
+if [ $READ_RC -ne 0 ]; then
   if ! command -v node >/dev/null 2>&1; then
     apt-get update && apt-get install -y nodejs npm >/dev/null 2>&1 || true
   fi
-  node - <<'NODE' "$INITIAL_LIQUIDITY" "$WARP_FILE" > /tmp/seed-plan.txt
+  node - <<'NODE' "$INITIAL_LIQUIDITY" "$WARP_FILE" > /tmp/seed-plan.txt || exit 4
 const fs = require('fs');
 const yaml = require('yaml');
 const liq = process.argv[2];

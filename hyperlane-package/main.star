@@ -118,7 +118,7 @@ def run(plan, args):
                 plan.exec(
                     service_name = "hyperlane-cli",
                     recipe = ExecRecipe(
-                        command = ["sh", "-lc", "INITIAL_LIQUIDITY=\"" + liq_str + "\" /usr/local/bin/seed_liquidity.sh"],
+                        command = ["sh", "-lc", "SYMBOL=" + sym + " REGISTRY_DIR=/configs/registry INITIAL_LIQUIDITY=\"" + liq_str + "\" /usr/local/bin/seed_liquidity.sh"],
                     ),
                 )
 
@@ -249,7 +249,7 @@ def run(plan, args):
         plan.exec(
             service_name = "hyperlane-cli",
             recipe = ExecRecipe(
-                command = ["sh", "-lc", "ORIGIN=" + origin + " DESTINATION=" + dest + " AMOUNT=" + str(amt) + " /usr/local/bin/send_warp.sh"],
+                command = ["sh", "-lc", "REGISTRY_DIR=/configs/registry SYMBOL=" + sym + " ORIGIN=" + origin + " DESTINATION=" + dest + " AMOUNT=" + str(amt) + " /usr/local/bin/send_warp.sh"],
             ),
         )
 
