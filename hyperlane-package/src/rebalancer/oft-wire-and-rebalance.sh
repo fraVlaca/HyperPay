@@ -5,46 +5,16 @@ set -euo pipefail
 : "${SEPOLIA_RPC:?missing}"
 : "${ARBSEPOLIA_RPC:?missing}"
 : "${SYMBOL:?missing}"
-: "${OWNER:?missing}"
-: "${REBALANCER:?missing}"
-: "${OFT_SEPOLIA:?missing}"
-: "${OFT_ARBSEPOLIA:?missing}"
 : "${LZ_EID_SEPOLIA:?missing}"
 : "${LZ_EID_ARBSEPOLIA:?missing}"
+: "${OFT_SEPOLIA:?missing}"
+: "${OFT_ARBSEPOLIA:?missing}"
 
 REGISTRY_URL="${REGISTRY_URL:-https://github.com/hyperlane-xyz/hyperlane-registry}"
 OVERRIDES_DIR="${OVERRIDES_DIR:-$HOME/.hyperlane}"
 WORK_DIR="${WORK_DIR:-$(pwd)}"
-ROUTE_FILE="${WORK_DIR}/warp-route.yaml"
 READ_JSON="${WORK_DIR}/warp-read.json"
 REB_CONF="${WORK_DIR}/rebalancer.oft.yaml"
-
-echo "== Writing warp-route.yaml =="
-cat > "$ROUTE_FILE" <<YAML
-symbol: ${SYMBOL}
-decimals: 18
-owner: "${OWNER}"
-topology:
-  sepolia: collateral
-  arbitrum-sepolia: collateral
-token_addresses:
-  sepolia:           "${OFT_SEPOLIA}"
-  arbitrum-sepolia:  "${OFT_ARBSEPOLIA}"
-rebalancer:
-  address: "${REBALANCER}"
-  policy:
-    low_watermark_pct: 0.30
-    high_watermark_pct: 0.60
-    min_rebalance_amount: "100000000000000000"
-bridge:
-  type: oft
-YAML
-
-echo "== Deploying/attaching Warp Route =="
-hyperlane warp deploy \
-  --registry "$REGISTRY_URL" \
-  --overrides "$OVERRIDES_DIR" \
-  --config "$ROUTE_FILE"
 
 echo "== Reading Warp Route =="
 hyperlane warp read \
@@ -72,7 +42,7 @@ echo "Arbitrum Sepolia Router: ${ARBSEP_ROUTER}"
 PEER_SEP=$(cast abi-encode "f(address)" "$SEPOLIA_ROUTER")
 PEER_ARB=$(cast abi-encode "f(address)" "$ARBSEP_ROUTER")
 
-echo "== Wiring LZ EID/domain mappings via addDomain =="
+echo "== Wiring LayerZero EID mappings via addDomain on both routers =="
 ETH_RPC_URL="$SEPOLIA_RPC" cast send "$SEPOLIA_ROUTER" \
   "addDomain(uint32,uint16,bytes,bytes)" \
   421614 "$LZ_EID_ARBSEPOLIA" 0x 0x \
@@ -83,7 +53,7 @@ ETH_RPC_URL="$ARBSEPOLIA_RPC" cast send "$ARBSEP_ROUTER" \
   11155111 "$LZ_EID_SEPOLIA" 0x 0x \
   --private-key "$HYP_KEY" --legacy
 
-echo "== Enrolling peers (recipient) and allowlists =="
+echo "== Enrolling recipients and allowlisting rebalancer/bridges =="
 ETH_RPC_URL="$SEPOLIA_RPC" cast send "$SEPOLIA_ROUTER" \
   "setRecipient(uint32,bytes32)" 421614 "$PEER_ARB" \
   --private-key "$HYP_KEY" --legacy || true
@@ -92,13 +62,15 @@ ETH_RPC_URL="$ARBSEPOLIA_RPC" cast send "$ARBSEP_ROUTER" \
   "setRecipient(uint32,bytes32)" 11155111 "$PEER_SEP" \
   --private-key "$HYP_KEY" --legacy || true
 
-ETH_RPC_URL="$SEPOLIA_RPC" cast send "$SEPOLIA_ROUTER" \
-  "addRebalancer(address)" "$REBALANCER" \
-  --private-key "$HYP_KEY" --legacy || true
+if [ -n "${REBALANCER:-}" ]; then
+  ETH_RPC_URL="$SEPOLIA_RPC" cast send "$SEPOLIA_ROUTER" \
+    "addRebalancer(address)" "$REBALANCER" \
+    --private-key "$HYP_KEY" --legacy || true
 
-ETH_RPC_URL="$ARBSEPOLIA_RPC" cast send "$ARBSEP_ROUTER" \
-  "addRebalancer(address)" "$REBALANCER" \
-  --private-key "$HYP_KEY" --legacy || true
+  ETH_RPC_URL="$ARBSEPOLIA_RPC" cast send "$ARBSEP_ROUTER" \
+    "addRebalancer(address)" "$REBALANCER" \
+    --private-key "$HYP_KEY" --legacy || true
+fi
 
 ETH_RPC_URL="$SEPOLIA_RPC" cast send "$SEPOLIA_ROUTER" \
   "addBridge(uint32,address)" 421614 "$ARBSEP_ROUTER" \
@@ -142,7 +114,7 @@ strategy:
       weighted: { weight: 100, tolerance: 10 }
 YAML
 
-echo "== Start monitor-only (press Ctrl+C after confirming deltas) =="
+echo "== Run monitor-only for visibility =="
 node ./repos/hyperlane-monorepo/typescript/cli/cli-bundle/index.js warp rebalancer \
   --config "$REB_CONF" \
   --monitorOnly \
@@ -150,7 +122,7 @@ node ./repos/hyperlane-monorepo/typescript/cli/cli-bundle/index.js warp rebalanc
   --registry "$OVERRIDES_DIR" \
   --registry "$REGISTRY_URL"
 
-echo "== Flip to live for one cycle =="
+echo "== Run live for ~30s to execute one cycle =="
 node ./repos/hyperlane-monorepo/typescript/cli/cli-bundle/index.js warp rebalancer \
   --config "$REB_CONF" \
   --checkFrequency 10 \

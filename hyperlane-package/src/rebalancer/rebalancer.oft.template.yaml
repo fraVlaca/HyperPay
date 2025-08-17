@@ -17,7 +17,7 @@ strategy:
       bridgeLockTime: 20
       bridgeMinAcceptedAmount: "1"
       weighted: { weight: 10, tolerance: 5 }
-    arbitrumsepolia:
+    arbitrum-sepolia:
       bridge: "0x<ARBSEPOLIA_ROUTER>"
       bridgeLockTime: 20
       bridgeMinAcceptedAmount: "1"
