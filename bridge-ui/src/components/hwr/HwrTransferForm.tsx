@@ -156,6 +156,15 @@ export default function HwrTransferForm({
             <div className="text-sm">{amount || "0"}</div>
           </div>
         </div>
+        <div className="mt-3 space-y-2">
+          <label className="text-xs text-gray-500">Note (optional)</label>
+          <input
+            className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-900/10"
+            placeholder="Add a note for your records"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
       </Collapsible>
 
       {!edgesOk && (
@@ -164,20 +173,12 @@ export default function HwrTransferForm({
         </div>
       )}
 
-      <div className="space-y-2">
-        <label className="text-xs text-gray-500">Note (optional)</label>
-        <input
-          className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-900/10"
-          placeholder="Add a note for your records"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </div>
 
-      <button
-        disabled={!edgesOk || busy}
-        className="w-full rounded-xl bg-gray-900 px-4 py-2.5 text-sm text-white disabled:opacity-50"
-        onClick={async () => {
+      <div className="flex items-center justify-between -mt-1">
+        <button
+          disabled={!edgesOk || busy}
+          className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm text-white disabled:opacity-50"
+          onClick={async () => {
           if (!edgesOk) {
             toast.error("No valid HWR edge for this route");
             return;
@@ -209,10 +210,15 @@ export default function HwrTransferForm({
           } finally {
             setBusy(false);
           }
-        }}
-      >
-        {busy ? "Submitting…" : "Submit normal transfer"}
-      </button>
+          }}
+        >
+          {busy ? "Submitting…" : "Submit normal transfer"}
+        </button>
+        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[3px]">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-80"><path d="M12 8v5l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2"/></svg>
+          <span>3m</span>
+        </div>
+      </div>
 
       <Collapsible title="Fast transfer parameters" subtitle="Configure solver intent" defaultOpen={false}>
         <div className="space-y-3">
@@ -270,13 +276,19 @@ export default function HwrTransferForm({
         </div>
       </Collapsible>
 
-      <button
-        disabled={!edgesOk}
-        className="w-full rounded-xl bg-brand-700 hover:bg-brand-800 px-4 py-2.5 text-sm text-white disabled:opacity-50"
-        onClick={handleFastSubmit}
-      >
-        Submit Fast Transfer
-      </button>
+      <div className="flex items-center justify-between -mt-1">
+        <button
+          disabled={!edgesOk}
+          className="rounded-xl bg-brand-700 hover:bg-brand-800 px-4 py-2.5 text-sm text-white disabled:opacity-50"
+          onClick={handleFastSubmit}
+        >
+          Submit Fast Transfer
+        </button>
+        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[3px]">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-80"><path d="M12 8v5l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2"/></svg>
+          <span>20s</span>
+        </div>
+      </div>
     </div>
   );
 }
