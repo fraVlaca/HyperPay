@@ -1,7 +1,7 @@
 @keyframes skate {
-  0% { transform: translateX(-40%); }
-  50% { transform: translateX(120%); }
-  100% { transform: translateX(-40%); }
+  0% { transform: translateX(-60vw); }
+  50% { transform: translateX(120vw); }
+  100% { transform: translateX(-60vw); }
 }
 .animate-skate {
   animation: skate 8s ease-in-out infinite;

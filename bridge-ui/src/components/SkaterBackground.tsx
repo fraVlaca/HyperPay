@@ -15,17 +15,15 @@ export default function SkaterBackground({ className }: Props) {
         className
       )}
     >
-      <div className="mx-auto max-w-7xl">
-        <div className="relative h-full w-full">
-          <div className="absolute bottom-0 left-0 animate-skate opacity-20 saturate-100 will-change-transform">
-            <Image
-              src="/img/hyperpay_skateboard.png"
-              alt=""
-              width={340}
-              height={340}
-              priority
-            />
-          </div>
+      <div className="relative h-full w-screen">
+        <div className="absolute bottom-0 left-0 animate-skate opacity-20 saturate-100 will-change-transform">
+          <Image
+            src="/img/hyperpay_skateboard.png"
+            alt=""
+            width={340}
+            height={340}
+            priority
+          />
         </div>
       </div>
     </div>
