@@ -23,6 +23,8 @@ export type HwrTopology = {
   routers: HwrRouterAddresses;
   edges: Array<{ from: ChainKey; to: ChainKey }>; 
   supportsMultiSource: boolean;
+  balances?: Record<ChainKey, string | undefined>;
+
 };
 
 export type OftTokenAddresses = Record<ChainKey, string | undefined>;
@@ -31,6 +33,8 @@ export type OftRoute = {
   token: string;
   oft: OftTokenAddresses;
   endpointIds?: Record<ChainKey, number | undefined>;
+  balances?: Record<ChainKey, string | undefined>;
+
 };
 
 export type RouteConfig =
