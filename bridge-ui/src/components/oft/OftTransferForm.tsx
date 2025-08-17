@@ -1,10 +1,12 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAccount, useWalletClient } from "wagmi";
 import type { ChainKey, UnifiedRegistry } from "@config/types";
 import clsx from "clsx";
 import { toast } from "react-toastify";
 import { sendOft } from "@lib/oftSend";
 import { getDevWalletClient } from "@lib/wallet";
+import Collapsible from "@components/ui/Collapsible";
+import { buildCrossChainOrder, toUnits } from "@lib/fastIntent";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -13,7 +15,6 @@ type Props = {
   destination: ChainKey;
   amount: string;
 };
-
 
 const CHAIN_IDS: Record<string, number> = {
   ethereum: 1,
@@ -32,6 +33,37 @@ export default function OftTransferForm({
   const { data: walletClient } = useWalletClient();
   const [busy, setBusy] = useState(false);
 
+  const [settlementAddress, setSettlementAddress] = useState<string>("");
+  const [destinationAddress, setDestinationAddress] = useState<string>("");
+  const [minOut, setMinOut] = useState<string>("");
+  const [initiateDeadline, setInitiateDeadline] = useState<number>(3600);
+  const [fillDeadline, setFillDeadline] = useState<number>(7200);
+
+  useEffect(() => {
+    if (address && !destinationAddress) setDestinationAddress(address);
+  }, [address, destinationAddress]);
+
+  useEffect(() => {
+    const dec = registry.tokens.find((t) => t.symbol === token)?.decimals ?? 6;
+    const amt = amount && amount.length > 0 ? amount : "0";
+    const ninetyFive = (() => {
+      try {
+        const v = Number(amt);
+        if (!isFinite(v)) return "0";
+        return (v * 0.95).toString();
+      } catch {
+        return "0";
+      }
+    })();
+    setMinOut(ninetyFive);
+  }, [amount, token, registry]);
+
+  useEffect(() => {
+    const envKey = `NEXT_PUBLIC_OUTPUT_SETTLER_${destination.toUpperCase()}`;
+    const val = (typeof process !== "undefined" ? (process as any).env?.[envKey] : undefined) as string | undefined;
+    if (val) setSettlementAddress(val);
+  }, [destination]);
+
   const cfg = useMemo(() => {
     const route = registry.routes.find(
       (r) => r.bridgeType === "OFT" && r.oft.token === token
@@ -41,15 +73,77 @@ export default function OftTransferForm({
     return { addresses, eids };
   }, [registry, token]);
 
+  const summarySubtitle = `${origin} → ${destination} · ${amount || "0"} ${token}`;
+
+  function resolveOftTokens() {
+    const route = registry.routes.find((r) => r.bridgeType === "OFT" && r.oft.token === token);
+    if (!route || route.bridgeType !== "OFT") throw new Error("OFT route not found");
+    const addrs = route.oft.oft as Record<string, `0x${string}`>;
+    const input = addrs[origin];
+    const output = addrs[destination];
+    if (!input || !output) throw new Error("Missing OFT token addresses");
+    return { inputToken: input as `0x${string}`, outputToken: output as `0x${string}` };
+  }
+
+  async function handleFastSubmit() {
+    try {
+      let client = walletClient as any;
+      let from = address as `0x${string}` | undefined;
+      if (!client || !from) {
+        const devClient = await getDevWalletClient(origin);
+        if (!devClient) {
+          toast.error("Connect a wallet first");
+          return;
+        }
+        client = devClient as any;
+        from = (devClient.account?.address as `0x${string}`) as any;
+      }
+      const expectedChainId = CHAIN_IDS[origin];
+      if (expectedChainId && client?.chain && client.chain.id !== expectedChainId) {
+        toast.error(`Switch wallet to ${origin} to send`);
+        return;
+      }
+      const decimals = registry.tokens.find((t) => t.symbol === token)?.decimals ?? 6;
+      const { inputToken, outputToken } = resolveOftTokens();
+      const inputAmount = toUnits(amount || "0", decimals);
+      const minOutputAmount = toUnits(minOut || "0", decimals);
+      const destAddr = (destinationAddress || from) as `0x${string}`;
+      const settle = settlementAddress as `0x${string}`;
+
+      const order = buildCrossChainOrder({
+        registry,
+        tokenSymbol: token,
+        origin,
+        destination,
+        decimals,
+        swapper: from as `0x${string}`,
+        destinationAddress: destAddr,
+        inputAmount,
+        minOutputAmount,
+        settlementAddress: settle,
+        inputToken,
+        outputToken,
+        initiateInSeconds: initiateDeadline,
+        fillInSeconds: fillDeadline
+      });
+
+      console.debug("[fast-intent][OFT] order", order);
+      toast.info("Fast transfer intent prepared. Check console for details.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Failed to prepare fast transfer");
+    }
+  }
+
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border bg-gray-50 p-3 text-xs text-gray-700">
-        <div>Token: {token}</div>
-        <div>
-          Route: {origin} -&gt; {destination}
+      <Collapsible title="Connection route" subtitle={summarySubtitle} defaultOpen={false}>
+        <div className="text-xs text-gray-700 space-y-1">
+          <div>Token: {token}</div>
+          <div>Route: {origin} -&gt; {destination}</div>
+          <div>Amount: {amount || "0"}</div>
         </div>
-        <div>Amount: {amount || "0"}</div>
-      </div>
+      </Collapsible>
 
       <button
         disabled={busy}
@@ -70,10 +164,8 @@ export default function OftTransferForm({
                 setBusy(false);
                 return;
               }
-              // @ts-ignore
-              client = devClient;
-              // @ts-ignore
-              fromAddr = (devClient.account?.address as string) as any;
+              client = devClient as any;
+              fromAddr = (devClient as any).account?.address as any;
             }
             const expectedChainId = CHAIN_IDS[origin];
             if (expectedChainId && (client as any)?.chain && (client as any).chain.id !== expectedChainId) {
@@ -99,7 +191,71 @@ export default function OftTransferForm({
           }
         }}
       >
-        Review & Send
+        Submit normal transfer
+      </button>
+
+      <Collapsible title="Fast transfer parameters" subtitle="Configure solver intent" defaultOpen={false}>
+        <div className="space-y-3">
+          <div>
+            <div className="text-xs text-gray-500">Settlement address</div>
+            <input
+              className="w-full rounded-lg border px-3 py-2 text-sm"
+              placeholder="0x..."
+              value={settlementAddress}
+              onChange={(e) => setSettlementAddress(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
+              <div className="text-xs text-gray-500">Destination address</div>
+              <input
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+                placeholder="0x..."
+                value={destinationAddress}
+                onChange={(e) => setDestinationAddress(e.target.value)}
+              />
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Min output amount ({token})</div>
+              <input
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+                placeholder="0.0"
+                value={minOut}
+                onChange={(e) => setMinOut(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
+              <div className="text-xs text-gray-500">Initiate deadline (seconds from now)</div>
+              <input
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+                type="number"
+                min={60}
+                value={initiateDeadline}
+                onChange={(e) => setInitiateDeadline(parseInt(e.target.value || "0", 10))}
+              />
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Fill deadline (seconds from now)</div>
+              <input
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+                type="number"
+                min={120}
+                value={fillDeadline}
+                onChange={(e) => setFillDeadline(parseInt(e.target.value || "0", 10))}
+              />
+            </div>
+          </div>
+
+        </div>
+      </Collapsible>
+
+      <button
+        className="w-full rounded-xl bg-brand-700 hover:bg-brand-800 px-4 py-2.5 text-sm text-white"
+        onClick={handleFastSubmit}
+      >
+        Submit Fast Transfer
       </button>
     </div>
   );
