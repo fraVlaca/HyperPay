@@ -55,7 +55,10 @@ export async function sendOft(params: {
   const publicClient = createPublicClient({ chain: viemChain, transport });
 
   const recipientBytes32 = padHex(getAddress(sender), { size: 32 });
-  const emptyBytes = "0x";
+
+  const { Options } = await import("@layerzerolabs/lz-v2-utilities");
+  const toHexBytes = (b: any) => (typeof b === "string" && b.startsWith("0x")) ? b : ("0x" + Buffer.from(b as Uint8Array).toString("hex"));
+  const lzOptions = toHexBytes(Options.newOptions().addExecutorLzReceiveOption(300_000, 0).toBytes());
 
   let out: readonly [bigint, bigint];
   try {
@@ -63,7 +66,7 @@ export async function sendOft(params: {
       address: tokenAddr,
       abi: OFT_ABI,
       functionName: "quoteSend",
-      args: [Number(toEid), recipientBytes32, amountWei, emptyBytes]
+      args: [Number(toEid), recipientBytes32, amountWei, lzOptions]
     }) as any;
   } catch (e: any) {
     throw new Error(e?.shortMessage || e?.message || "quoteSend reverted; verify OFT adapter address and peers");
@@ -74,7 +77,7 @@ export async function sendOft(params: {
     address: tokenAddr,
     abi: OFT_ABI,
     functionName: "send",
-    args: [Number(toEid), recipientBytes32, amountWei, emptyBytes, emptyBytes],
+    args: [Number(toEid), recipientBytes32, amountWei, lzOptions, "0x"],
     value: nativeFee > 0n ? nativeFee : undefined
   });
   return { hash, fee: nativeFee.toString() };
