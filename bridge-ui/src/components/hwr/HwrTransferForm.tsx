@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChainLogo } from "@hyperlane-xyz/widgets";
 import { ChainKey, UnifiedRegistry } from "@config/types";
 import { Source } from "../MultiSourcePanel";
@@ -7,6 +7,8 @@ import { useAccount, useWalletClient } from "wagmi";
 import { toast } from "react-toastify";
 import { sendHwr } from "@lib/hwrSend";
 import { getDevWalletClient } from "@lib/wallet";
+import Collapsible from "@components/ui/Collapsible";
+import { buildCrossChainOrder, toUnits } from "@lib/fastIntent";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -30,6 +32,37 @@ export default function HwrTransferForm({
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
 
+  const [settlementAddress, setSettlementAddress] = useState<string>("");
+  const [destinationAddress, setDestinationAddress] = useState<string>("");
+  const [minOut, setMinOut] = useState<string>("");
+  const [initiateDeadline, setInitiateDeadline] = useState<number>(3600);
+  const [fillDeadline, setFillDeadline] = useState<number>(7200);
+
+  useEffect(() => {
+    if (address && !destinationAddress) setDestinationAddress(address);
+  }, [address, destinationAddress]);
+
+  useEffect(() => {
+    const dec = registry.tokens.find((t) => t.symbol === token)?.decimals ?? 6;
+    const amt = amount && amount.length > 0 ? amount : "0";
+    const ninetyFive = (() => {
+      try {
+        const v = Number(amt);
+        if (!isFinite(v)) return "0";
+        return (v * 0.95).toString();
+      } catch {
+        return "0";
+      }
+    })();
+    setMinOut(ninetyFive);
+  }, [amount, token, registry]);
+
+  useEffect(() => {
+    const envKey = `NEXT_PUBLIC_OUTPUT_SETTLER_${destination.toUpperCase()}`;
+    const val = (typeof process !== "undefined" ? (process as any).env?.[envKey] : undefined) as string | undefined;
+    if (val) setSettlementAddress(val);
+  }, [destination]);
+
   const edgesOk = useMemo(() => {
     const primaryOk = isEdgeAvailable(registry, token, origin, destination);
     const extrasOk = extraSources.every((s) =>
@@ -37,6 +70,70 @@ export default function HwrTransferForm({
     );
     return primaryOk && extrasOk;
   }, [registry, token, origin, destination, extraSources]);
+
+  const summarySubtitle = `${origin} → ${destination} · ${amount || "0"} ${token}`;
+
+  function resolveHwrTokens() {
+    const route = registry.routes.find((r) => r.bridgeType === "HWR" && r.hwr.token === token);
+    if (!route || route.bridgeType !== "HWR") throw new Error("HWR route not found");
+    const collateral = (route.hwr as any).collateralTokens as Record<string, `0x${string}`> | undefined;
+    const synthetic = ((route.hwr as any).syntheticToken || {}) as Record<string, `0x${string}`>;
+    const input =
+      origin === "optimism" ? synthetic?.[origin] : collateral?.[origin];
+    const output =
+      destination === "optimism" ? synthetic?.[destination] : collateral?.[destination];
+    if (!input || !output) throw new Error("Missing token addresses for route");
+    return { inputToken: input as `0x${string}`, outputToken: output as `0x${string}` };
+  }
+
+  async function handleFastSubmit() {
+    try {
+      if (!edgesOk) {
+        toast.error("No valid HWR edge for this route");
+        return;
+      }
+      let client = walletClient as any;
+      let from = address as `0x${string}` | undefined;
+      if (!client || !from) {
+        const devClient = await getDevWalletClient(origin);
+        if (!devClient) {
+          toast.error("Connect a wallet first");
+          return;
+        }
+        client = devClient as any;
+        from = (devClient.account?.address as `0x${string}`) as any;
+      }
+      const decimals = registry.tokens.find((t) => t.symbol === token)?.decimals ?? 6;
+      const { inputToken, outputToken } = resolveHwrTokens();
+      const inputAmount = toUnits(amount || "0", decimals);
+      const minOutputAmount = toUnits(minOut || "0", decimals);
+      const destAddr = (destinationAddress || from) as `0x${string}`;
+      const settle = settlementAddress as `0x${string}`;
+
+      const order = buildCrossChainOrder({
+        registry,
+        tokenSymbol: token,
+        origin,
+        destination,
+        decimals,
+        swapper: from as `0x${string}`,
+        destinationAddress: destAddr,
+        inputAmount,
+        minOutputAmount,
+        settlementAddress: settle,
+        inputToken,
+        outputToken,
+        initiateInSeconds: initiateDeadline,
+        fillInSeconds: fillDeadline
+      });
+
+      console.debug("[fast-intent][HWR] order", order);
+      toast.info("Fast transfer intent prepared. Check console for details.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Failed to prepare fast transfer");
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -48,17 +145,18 @@ export default function HwrTransferForm({
         <span className="text-sm">{destination}</span>
       </div>
 
-      <div className="rounded-xl border p-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div>
-          <div className="text-xs text-gray-500">Token</div>
-          <div className="text-sm">{token}</div>
+      <Collapsible title="Connection route" subtitle={summarySubtitle} defaultOpen={false}>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div>
+            <div className="text-xs text-gray-500">Token</div>
+            <div className="text-sm">{token}</div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-500">Amount</div>
+            <div className="text-sm">{amount || "0"}</div>
+          </div>
         </div>
-        <div>
-          <div className="text-xs text-gray-500">Amount</div>
-          <div className="text-sm">{amount || "0"}</div>
-        </div>
-      </div>
-
+      </Collapsible>
 
       {!edgesOk && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -113,7 +211,71 @@ export default function HwrTransferForm({
           }
         }}
       >
-        {busy ? "Submitting…" : "Review & Continue"}
+        {busy ? "Submitting…" : "Submit normal transfer"}
+      </button>
+
+      <Collapsible title="Fast transfer parameters" subtitle="Configure solver intent" defaultOpen={false}>
+        <div className="space-y-3">
+          <div>
+            <div className="text-xs text-gray-500">Settlement address</div>
+            <input
+              className="w-full rounded-lg border px-3 py-2 text-sm"
+              placeholder="0x..."
+              value={settlementAddress}
+              onChange={(e) => setSettlementAddress(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
+              <div className="text-xs text-gray-500">Destination address</div>
+              <input
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+                placeholder="0x..."
+                value={destinationAddress}
+                onChange={(e) => setDestinationAddress(e.target.value)}
+              />
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Min output amount ({token})</div>
+              <input
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+                placeholder="0.0"
+                value={minOut}
+                onChange={(e) => setMinOut(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
+              <div className="text-xs text-gray-500">Initiate deadline (seconds from now)</div>
+              <input
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+                type="number"
+                min={60}
+                value={initiateDeadline}
+                onChange={(e) => setInitiateDeadline(parseInt(e.target.value || "0", 10))}
+              />
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Fill deadline (seconds from now)</div>
+              <input
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+                type="number"
+                min={120}
+                value={fillDeadline}
+                onChange={(e) => setFillDeadline(parseInt(e.target.value || "0", 10))}
+              />
+            </div>
+          </div>
+        </div>
+      </Collapsible>
+
+      <button
+        disabled={!edgesOk}
+        className="w-full rounded-xl bg-brand-700 hover:bg-brand-800 px-4 py-2.5 text-sm text-white disabled:opacity-50"
+        onClick={handleFastSubmit}
+      >
+        Submit Fast Transfer
       </button>
     </div>
   );
