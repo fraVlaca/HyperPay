@@ -73,7 +73,8 @@ export async function sendHwr(params: {
       address: spendToken,
       abi: ERC20_ABI,
       functionName: "approve",
-      args: [router, amountWei]
+      args: [router, amountWei],
+      account: sender
     });
   }
 

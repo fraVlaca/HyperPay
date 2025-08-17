@@ -4,7 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "@rainbow-me/rainbowkit/styles.css";
 import { WagmiProvider, http } from "wagmi";
 import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { mainnet, arbitrum, base } from "wagmi/chains";
+import { mainnet, arbitrum, optimism } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 
@@ -13,11 +13,11 @@ const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_ID || "demo";
 const wagmiConfig = getDefaultConfig({
   appName: "HyperPay Bridge",
   projectId,
-  chains: [mainnet, arbitrum, base],
+  chains: [mainnet, arbitrum, optimism],
   transports: {
     [mainnet.id]: http(),
     [arbitrum.id]: http(),
-    [base.id]: http()
+    [optimism.id]: http()
   },
   ssr: true
 });

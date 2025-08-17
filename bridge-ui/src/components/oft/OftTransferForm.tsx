@@ -99,7 +99,7 @@ export default function OftTransferForm({
           }
         }}
       >
-        Review &amp; Send
+        Review & Send
       </button>
     </div>
   );

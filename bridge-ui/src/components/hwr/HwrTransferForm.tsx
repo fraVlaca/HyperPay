@@ -129,7 +129,7 @@ export default function HwrTransferForm({
           }
         }}
       >
-        {busy ? "Submitting…" : "Review &amp; Continue"}
+        {busy ? "Submitting…" : "Review & Continue"}
       </button>
     </div>
   );
