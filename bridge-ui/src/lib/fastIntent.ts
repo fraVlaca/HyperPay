@@ -1,24 +1,7 @@
-import { createPublicClient, getAddress, http, padHex, parseUnits } from "viem";
-import type { ChainKey, UnifiedRegistry } from "@config/types";
+import { createPublicClient, encodeAbiParameters, getAddress, http, padHex, parseUnits } from "viem";
+import type { ChainKey } from "@config/types";
 import { mainnet, arbitrum, optimism, base } from "viem/chains";
 import { ERC20_ABI } from "./abis";
-
-export type CrossChainOrder = {
-  settlementAddress: `0x${string}`;
-  swapper: `0x${string}`;
-  nonce: string;
-  originChainId: number;
-  initiateDeadline: number;
-  fillDeadline: number;
-  orderData: {
-    inputToken: `0x${string}`;
-    inputAmount: string;
-    outputToken: `0x${string}`;
-    minOutputAmount: string;
-    destinationChainId: number;
-    destinationAddress: `0x${string}`;
-  };
-};
 
 const CHAIN_TO_VIEM: Record<string, any> = {
   ethereum: mainnet,
@@ -39,49 +22,6 @@ export function resolveChainId(chain: ChainKey): number {
   return id;
 }
 
-export function buildCrossChainOrder(params: {
-  registry: UnifiedRegistry;
-  tokenSymbol: string;
-  origin: ChainKey;
-  destination: ChainKey;
-  decimals?: number;
-  swapper: `0x${string}`;
-  destinationAddress: `0x${string}`;
-  inputAmount: string;
-  minOutputAmount: string;
-  settlementAddress: `0x${string}`;
-  now?: number;
-  inputToken: `0x${string}`;
-  outputToken: `0x${string}`;
-  initiateInSeconds?: number;
-  fillInSeconds?: number;
-}): CrossChainOrder {
-  const now = params.now || Math.floor(Date.now() / 1000);
-  const originChainId = resolveChainId(params.origin);
-  const destinationChainId = resolveChainId(params.destination);
-
-  const initiateSeconds = typeof params.initiateInSeconds === "number" ? params.initiateInSeconds : 3600;
-  const fillSeconds = typeof params.fillInSeconds === "number" ? params.fillInSeconds : 7200;
-
-  const order: CrossChainOrder = {
-    settlementAddress: params.settlementAddress,
-    swapper: params.swapper,
-    nonce: BigInt(now).toString(),
-    originChainId,
-    initiateDeadline: now + initiateSeconds,
-    fillDeadline: now + fillSeconds,
-  orderData: {
-      inputToken: params.inputToken,
-      inputAmount: params.inputAmount,
-      outputToken: params.outputToken,
-      minOutputAmount: params.minOutputAmount,
-      destinationChainId,
-      destinationAddress: params.destinationAddress,
-    },
-  };
-  return order;
-}
-
 export function toUnits(amount: string, decimals: number): string {
   return parseUnits((amount && amount.length > 0 ? amount : "0"), decimals).toString();
 }
@@ -89,19 +29,20 @@ export function toUnits(amount: string, decimals: number): string {
 export const INPUT_SETTLER_ABI = [
   {
     type: "function",
-    name: "openIntent",
+    name: "open",
     stateMutability: "nonpayable",
+    inputs: [{ name: "order", type: "bytes" }],
+    outputs: [],
+  },
+  {
+    type: "event",
+    name: "Open",
     inputs: [
-      { name: "outputToken", type: "address" },
-      { name: "outputAmount", type: "uint256" },
-      { name: "outputChainId", type: "uint256" },
-      { name: "outputRecipient", type: "bytes32" },
-      { name: "fillDeadline", type: "uint256" },
-      { name: "inputToken", type: "address" },
-      { name: "inputAmount", type: "uint256" }
+      { name: "orderId", type: "bytes32", indexed: true },
+      { name: "order", type: "bytes", indexed: false },
     ],
-    outputs: [{ name: "", type: "bytes32" }]
-  }
+    anonymous: false,
+  },
 ] as const;
 
 const INPUT_SETTLERS_STATIC: Partial<Record<ChainKey, string | undefined>> = {
@@ -114,6 +55,97 @@ const INPUT_SETTLERS_STATIC: Partial<Record<ChainKey, string | undefined>> = {
 export function getInputSettlerAddress(origin: ChainKey): `0x${string}` | undefined {
   const val = INPUT_SETTLERS_STATIC[origin];
   return val ? (getAddress(val) as `0x${string}`) : undefined;
+}
+
+export function getOutputSettlerAddress(dest: ChainKey): `0x${string}` | undefined {
+  const map: Partial<Record<ChainKey, string | undefined>> = {
+    ethereum: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_OUTPUT_SETTLER_ETHEREUM : undefined),
+    arbitrum: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_OUTPUT_SETTLER_ARBITRUM : undefined),
+    optimism: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_OUTPUT_SETTLER_OPTIMISM : undefined),
+    base: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_OUTPUT_SETTLER_BASE : undefined),
+  };
+  const val = map[dest];
+  return val ? (getAddress(val) as `0x${string}`) : undefined;
+}
+
+export function getOracleAddress(chain: ChainKey): `0x${string}` | undefined {
+  const map: Partial<Record<ChainKey, string | undefined>> = {
+    ethereum: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_HYPERLANE_ORACLE_ETHEREUM : undefined) || "0xc005dc82818d67AF737725bD4bf75435d065D239",
+    arbitrum: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_HYPERLANE_ORACLE_ARBITRUM : undefined) || "0x77818DE6a93f0335E9A5817314Bb1e879d319C6F",
+    optimism: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_HYPERLANE_ORACLE_OPTIMISM : undefined) || "0x77818DE6a93f0335E9A5817314Bb1e879d319C6F",
+    base: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_HYPERLANE_ORACLE_BASE : undefined),
+  };
+  const val = map[chain];
+  return val ? (getAddress(val) as `0x${string}`) : undefined;
+}
+
+function addressToBytes32(addr: `0x${string}`): `0x${string}` {
+  return padHex(getAddress(addr), { size: 32 });
+}
+
+function addressToUint(addr: `0x${string}`): bigint {
+  return BigInt(getAddress(addr));
+}
+
+function encodeStandardOrder(params: {
+  user: `0x${string}`;
+  originChainId: number;
+  expires: number;
+  fillDeadline: number;
+  inputOracle: `0x${string}`;
+  inputs: { token: `0x${string}`; amount: bigint }[];
+  outputs: {
+    oracle: `0x${string}`;
+    settler: `0x${string}`;
+    chainId: number;
+    token: `0x${string}`;
+    amount: bigint;
+    recipient: `0x${string}`;
+    call?: `0x${string}`;
+    context?: `0x${string}`;
+  }[];
+}): `0x${string}` {
+  const tuple = {
+    user: params.user,
+    nonce: BigInt(Math.floor(Date.now() / 1000)),
+    originChainId: BigInt(params.originChainId),
+    expires: params.expires,
+    fillDeadline: params.fillDeadline,
+    inputOracle: params.inputOracle,
+    inputs: params.inputs.map((i) => [addressToUint(i.token), i.amount]),
+    outputs: params.outputs.map((o) => ({
+      oracle: addressToBytes32(o.oracle),
+      settler: addressToBytes32(o.settler),
+      chainId: BigInt(o.chainId),
+      token: addressToBytes32(o.token),
+      amount: o.amount,
+      recipient: addressToBytes32(o.recipient),
+      call: o.call || "0x",
+      context: o.context || "0x",
+    })),
+  };
+
+  return (encodeAbiParameters as any)(
+    [
+      {
+        type: "tuple",
+        components: [
+          { name: "user", type: "address" },
+          { name: "nonce", type: "uint256" },
+          { name: "originChainId", type: "uint256" },
+          { name: "expires", type: "uint32" },
+          { name: "fillDeadline", type: "uint32" },
+          { name: "inputOracle", type: "address" },
+          { name: "inputs", type: "uint256[2][]" },
+          {
+            name: "outputs",
+            type: "tuple(bytes32 oracle, bytes32 settler, uint256 chainId, bytes32 token, uint256 amount, bytes32 recipient, bytes call, bytes context)[]",
+          },
+        ],
+      } as const,
+    ],
+    [tuple]
+  );
 }
 
 export async function sendFastIntent(params: {
@@ -182,23 +214,38 @@ export async function sendFastIntent(params: {
     });
   }
 
-  const outputRecipientBytes32 = padHex(getAddress(outputRecipient), { size: 32 });
-  const outputChainId = resolveChainId(destination);
+  const inputOracle = getOracleAddress(origin);
+  const outputOracle = getOracleAddress(destination);
+  const outputSettler = getOutputSettlerAddress(destination);
+  if (!inputOracle || !outputOracle || !outputSettler) {
+    throw new Error("Missing oracle or output settler configuration");
+  }
+
+  const encodedOrder = encodeStandardOrder({
+    user: sender,
+    originChainId: resolveChainId(origin),
+    expires: Math.max(Math.floor(Date.now() / 1000) + 7200, fillDeadline + 3600),
+    fillDeadline,
+    inputOracle,
+    inputs: [{ token: inputToken, amount: BigInt(inputAmount) }],
+    outputs: [
+      {
+        oracle: outputOracle,
+        settler: outputSettler,
+        chainId: resolveChainId(destination),
+        token: outputToken,
+        amount: BigInt(outputAmount),
+        recipient: outputRecipient,
+      },
+    ],
+  });
 
   const hash: `0x${string}` = await walletClient.writeContract({
     address: settler,
     abi: INPUT_SETTLER_ABI,
-    functionName: "openIntent",
-    args: [
-      outputToken,
-      BigInt(outputAmount),
-      BigInt(outputChainId),
-      outputRecipientBytes32,
-      BigInt(fillDeadline),
-      inputToken,
-      BigInt(inputAmount)
-    ],
-    account: sender
+    functionName: "open",
+    args: [encodedOrder],
+    account: sender,
   });
 
   return { hash };
