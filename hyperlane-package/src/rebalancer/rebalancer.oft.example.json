@@ -36,11 +36,11 @@
   "oft": {
     "domains": {
       "sepolia": {
-        "lzEid": 10161,
+        "lzEid": 40161,
         "endpoint": "0xEndpointIfTracked"
       },
       "arbitrumsepolia": {
-        "lzEid": 10143,
+        "lzEid": 40231,
         "endpoint": "0xEndpointIfTracked"
       }
     }

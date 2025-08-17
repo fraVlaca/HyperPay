@@ -1,3 +1,20 @@
+OFT rebalancer quickstart
+
+Run via Docker
+docker run --rm \
+  -e HYP_KEY=&lt;PK&gt; \
+  -v ~/.hyperlane:/root/.hyperlane \
+  -v /absolute/path/to/config:/config \
+  fravlaca/hyperlane-monorepo:1.0.0 \
+  warp rebalancer \
+    --config /config/rebalancer.oft.json \
+    --monitorOnly \
+    --registry /root/.hyperlane \
+    --registry https://github.com/hyperlane-xyz/hyperlane-registry
+
+Notes
+- The rebalancer reads balances held by the route’s router contracts; fresh deployments may show zero until you fund the routers with the OFT.
+- Ensure on-chain LayerZero EID mappings are set via TokenBridgeOft.addDomain and router enrollments are configured both ways on the warp route.
 # HyperPay
 
 ## Hyperlane tools (HWR 2.0 + OFT deploy helpers)
