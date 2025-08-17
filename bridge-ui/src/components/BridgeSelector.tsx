@@ -7,6 +7,7 @@ import TokenBadge from "./ui/TokenBadge";
 import ChainSelect from "./ui/ChainSelect";
 import { useTokenBalance } from "../hooks/useTokenBalance";
 import { getDecimals, getTokenAddressForBalance } from "@lib/tokenAddressResolver";
+import { chainKeyToId } from "@lib/chainIds";
 
 type Selection = {
   token: string;
@@ -40,7 +41,8 @@ export default function BridgeSelector({
     registry.tokens.find((t) => t.symbol.toLowerCase() === "pyusd")?.symbol || "PYUSD";
   const decimals = getDecimals(registry, pyusdSymbol);
   const tokenAddr = getTokenAddressForBalance(registry, pyusdSymbol, selection.origin);
-  const { raw } = useTokenBalance({ tokenAddress: (tokenAddr as any) || null, decimals });
+  const chainIdOverride = chainKeyToId[selection.origin];
+  const { raw } = useTokenBalance({ tokenAddress: (tokenAddr as any) || null, decimals, chainIdOverride });
 
   function update(partial: Partial<Selection>) {
     onChange({ ...selection, ...partial });
