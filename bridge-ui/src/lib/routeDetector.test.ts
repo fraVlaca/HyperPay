@@ -16,7 +16,7 @@ const registry: UnifiedRegistry = {
       bridgeType: "HWR",
       hwr: {
         token: "ETH",
-        routers: { ethereum: "0x1", arbitrum: "0x2", base: "0x3" },
+        routers: { ethereum: "0x1", arbitrum: "0x2", optimism: "0x4", base: "0x3" },
         edges: [
           { from: "arbitrum", to: "ethereum" },
           { from: "base", to: "ethereum" },
@@ -29,8 +29,8 @@ const registry: UnifiedRegistry = {
       bridgeType: "OFT",
       oft: {
         token: "USDC",
-        oft: { ethereum: "0xa", arbitrum: "0xb", base: "0xc" },
-        endpointIds: { ethereum: 30101, arbitrum: 30110, base: 30184 },
+        oft: { ethereum: "0xa", arbitrum: "0xb", optimism: "0xd", base: "0xc" },
+        endpointIds: { ethereum: 30101, arbitrum: 30110, optimism: 30111, base: 30184 },
       },
     },
   ],
@@ -76,7 +76,7 @@ describe("detectRoute", () => {
           bridgeType: "OFT",
           oft: {
             token: "USDC",
-            oft: { ethereum: "0xa", arbitrum: undefined as any, base: "0xc" },
+            oft: { ethereum: "0xa", arbitrum: undefined as any, optimism: "0xd", base: "0xc" },
           },
         },
       ],

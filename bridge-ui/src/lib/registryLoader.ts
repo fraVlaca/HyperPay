@@ -58,7 +58,9 @@ export async function loadRegistry(): Promise<UnifiedRegistry> {
       ? Object.entries(artifact.chains).map(([key, v]: any) => ({
           key,
           chainId: v.evmChainId,
-          name: v.displayName || key
+          name: v.displayName || key,
+          hyperlaneDomain: v.hyperlaneDomain,
+          lzEid: v.lzEid
         }))
       : [];
     const tokensFromArtifact = Array.isArray(artifact.tokens)
@@ -90,7 +92,9 @@ export async function loadRegistry(): Promise<UnifiedRegistry> {
           ? Object.entries(j.chains).map(([key, v]: any) => ({
               key,
               chainId: v.evmChainId,
-              name: v.displayName || key
+              name: v.displayName || key,
+              hyperlaneDomain: v.hyperlaneDomain,
+              lzEid: v.lzEid
             }))
           : [];
         const tokensFromLocal = Array.isArray(j.tokens)

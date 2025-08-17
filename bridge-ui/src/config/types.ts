@@ -6,6 +6,8 @@ export type ChainConfig = {
   name: string;
   rpcUrl?: string;
   logoUrl?: string;
+  hyperlaneDomain?: number;
+  lzEid?: number;
 };
 
 export type TokenConfig = {
