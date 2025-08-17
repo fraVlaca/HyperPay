@@ -1,7 +1,13 @@
 # CLI Infrastructure Module - Manages Hyperlane CLI service setup
 
-load("../config/constants.star", "get_constants")
-load("../utils/helpers.star", "safe_get", "join_strings", "format_key_value_pairs", "create_persistent_directory")
+constants_module = import_module("../config/constants.star")
+get_constants = constants_module.get_constants
+
+helpers_module = import_module("../utils/helpers.star")
+safe_get = helpers_module.safe_get
+join_strings = helpers_module.join_strings
+format_key_value_pairs = helpers_module.format_key_value_pairs
+create_persistent_directory = helpers_module.create_persistent_directory
 
 constants = get_constants()
 
@@ -71,14 +77,15 @@ def extract_chain_info(chains):
     id_pairs = {}
     
     for chain in chains:
-        name = chain["name"]
+        name = getattr(chain, "name", "")
         chain_names.append(name)
         
         # Add RPC URL
-        rpc_pairs[name] = chain["rpc_url"]
+        rpc_url = getattr(chain, "rpc_url", "")
+        rpc_pairs[name] = rpc_url
         
         # Add chain ID if available
-        chain_id = safe_get(chain, "chain_id", None)
+        chain_id = getattr(chain, "chain_id", None)
         if chain_id != None:
             id_pairs[name] = str(chain_id)
     
@@ -132,7 +139,7 @@ def build_cli_image():
     """
     return ImageBuildSpec(
         image_name = constants.CLI_IMAGE_NAME,
-        build_context_dir = "./src/deployments/hyperlane-deployer",
+        build_context_dir = "../../src/deployments/hyperlane-deployer",
     )
 
 # ============================================================================

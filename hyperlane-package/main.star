@@ -6,27 +6,48 @@
 # ============================================================================
 
 # Configuration modules
-load("./modules/config/constants.star", "get_constants")
-load("./modules/config/parser.star", "parse_configuration", "parse_agent_config", "parse_global_config", "parse_test_config")
-load("./modules/config/validator.star", "validate_configuration")
+constants_module = import_module("./modules/config/constants.star")
+get_constants = constants_module.get_constants
+
+parser_module = import_module("./modules/config/parser.star")
+parse_configuration = parser_module.parse_configuration
+parse_agent_config = parser_module.parse_agent_config
+parse_global_config = parser_module.parse_global_config
+parse_test_config = parser_module.parse_test_config
+
+validator_module = import_module("./modules/config/validator.star")
+validate_configuration = validator_module.validate_configuration
 
 # Contract deployment modules
-load("./modules/contracts/core.star", "deploy_core_contracts")
-load("./modules/contracts/warp.star", "deploy_warp_routes")
+core_module = import_module("./modules/contracts/core.star")
+deploy_core_contracts = core_module.deploy_core_contracts
+
+warp_module = import_module("./modules/contracts/warp.star")
+deploy_warp_routes = warp_module.deploy_warp_routes
 
 # Infrastructure modules
-load("./modules/infrastructure/cli.star", "build_cli_service")
-load("./modules/infrastructure/agents.star", "build_agent_config_service", "get_agent_image")
+cli_module = import_module("./modules/infrastructure/cli.star")
+build_cli_service = cli_module.build_cli_service
+
+agents_module = import_module("./modules/infrastructure/agents.star")
+build_agent_config_service = agents_module.build_agent_config_service
+get_agent_image = agents_module.get_agent_image
 
 # Service modules
-load("./modules/services/validator.star", "deploy_validators")
-load("./modules/services/relayer.star", "build_relayer_service")
+validator_service = import_module("./modules/services/validator.star")
+deploy_validators = validator_service.deploy_validators
+
+relayer_service = import_module("./modules/services/relayer.star")
+build_relayer_service = relayer_service.build_relayer_service
 
 # Testing modules
-load("./modules/testing/send_test.star", "run_send_test")
+test_module = import_module("./modules/testing/send_test.star")
+run_send_test = test_module.run_send_test
 
 # Utility modules
-load("./modules/utils/helpers.star", "create_persistent_directory", "log_info")
+helpers_module = import_module("./modules/utils/helpers.star")
+create_persistent_directory = helpers_module.create_persistent_directory
+log_info = helpers_module.log_info
 
 # Get constants
 constants = get_constants()
@@ -46,13 +67,13 @@ def run(plan, args):
     Returns:
         None
     """
-    log_info("Starting Hyperlane deployment")
+    plan.print("Starting Hyperlane deployment")
     
     # ========================================
     # PHASE 1: Configuration Parsing
     # ========================================
     
-    log_info("Phase 1: Parsing configuration")
+    plan.print("Phase 1: Parsing configuration")
     
     # Parse main configuration
     config = parse_configuration(args)
@@ -66,7 +87,7 @@ def run(plan, args):
     # PHASE 2: Configuration Validation
     # ========================================
     
-    log_info("Phase 2: Validating configuration")
+    plan.print("Phase 2: Validating configuration")
     
     # Validate entire configuration
     validate_configuration(config)
@@ -75,7 +96,7 @@ def run(plan, args):
     # PHASE 3: Infrastructure Setup
     # ========================================
     
-    log_info("Phase 3: Setting up infrastructure")
+    plan.print("Phase 3: Setting up infrastructure")
     
     # Create persistent directories
     configs_dir = create_persistent_directory("configs")
@@ -92,7 +113,7 @@ def run(plan, args):
     # PHASE 4: Contract Deployment
     # ========================================
     
-    log_info("Phase 4: Deploying contracts")
+    plan.print("Phase 4: Deploying contracts")
     
     # Deploy core contracts if needed
     deploy_core_contracts(
@@ -108,7 +129,7 @@ def run(plan, args):
     # PHASE 5: Agent Configuration
     # ========================================
     
-    log_info("Phase 5: Generating agent configuration")
+    plan.print("Phase 5: Generating agent configuration")
     
     # Build agent configuration generator
     build_agent_config_service(plan, config.chains, configs_dir)
@@ -117,7 +138,7 @@ def run(plan, args):
     # PHASE 6: Agent Services Deployment
     # ========================================
     
-    log_info("Phase 6: Deploying agent services")
+    plan.print("Phase 6: Deploying agent services")
     
     # Get agent Docker image
     agent_image = get_agent_image(global_settings.agent_tag)
@@ -146,7 +167,7 @@ def run(plan, args):
     # PHASE 7: Testing
     # ========================================
     
-    log_info("Phase 7: Running tests")
+    plan.print("Phase 7: Running tests")
     
     # Run send test if configured
     run_send_test(plan, test_config, config.warp_routes)
@@ -155,7 +176,7 @@ def run(plan, args):
     # COMPLETION
     # ========================================
     
-    log_info("Hyperlane deployment completed successfully")
+    plan.print("Hyperlane deployment completed successfully")
     
     # Return deployment summary
     return struct(

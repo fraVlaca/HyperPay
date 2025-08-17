@@ -1,7 +1,11 @@
 # Configuration Parser Module - Handles parsing and structuring of configuration
 
-load("./constants.star", "get_constants")
-load("../utils/helpers.star", "safe_get", "as_bool")
+constants_module = import_module("./constants.star")
+get_constants = constants_module.get_constants
+
+helpers_module = import_module("../utils/helpers.star")
+safe_get = helpers_module.safe_get
+as_bool = helpers_module.as_bool
 
 constants = get_constants()
 
@@ -19,10 +23,22 @@ def parse_configuration(args):
     Returns:
         Structured configuration object
     """
+    # Parse chains into structs
+    raw_chains = safe_get(args, "chains", [])
+    parsed_chains = []
+    for chain in raw_chains:
+        parsed_chains.append(parse_chain_config(chain))
+    
+    # Parse warp routes into structs
+    raw_warp_routes = safe_get(args, "warp_routes", [])
+    parsed_warp_routes = []
+    for route in raw_warp_routes:
+        parsed_warp_routes.append(parse_warp_route(route))
+    
     config = struct(
-        chains = safe_get(args, "chains", []),
+        chains = parsed_chains,
         agents = safe_get(args, "agents", {}),
-        warp_routes = safe_get(args, "warp_routes", []),
+        warp_routes = parsed_warp_routes,
         send_test = safe_get(args, "send_test", {}),
         global_config = safe_get(args, "global", {})
     )
@@ -46,6 +62,12 @@ def parse_agent_config(agents):
     relayer_cfg = safe_get(agents, "relayer", {})
     deployer_cfg = safe_get(agents, "deployer", {})
     
+    # Parse validators into structs
+    raw_validators = safe_get(agents, "validators", [])
+    parsed_validators = []
+    for validator in raw_validators:
+        parsed_validators.append(parse_validator_config(validator))
+    
     return struct(
         relayer_key = safe_get(relayer_cfg, "key", ""),
         allow_local_sync = as_bool(
@@ -53,7 +75,7 @@ def parse_agent_config(agents):
             True
         ),
         deployer_key = safe_get(deployer_cfg, "key", ""),
-        validators = safe_get(agents, "validators", [])
+        validators = parsed_validators
     )
 
 # ============================================================================
@@ -124,6 +146,15 @@ def parse_warp_route(warp_route):
     Returns:
         Structured warp route configuration
     """
+    # Parse initial liquidity into structs
+    raw_liquidity = safe_get(warp_route, "initialLiquidity", [])
+    parsed_liquidity = []
+    for liq in raw_liquidity:
+        parsed_liquidity.append(struct(
+            chain = safe_get(liq, "chain", ""),
+            amount = safe_get(liq, "amount", "0")
+        ))
+    
     return struct(
         symbol = safe_get(warp_route, "symbol", constants.DEFAULT_ROUTE_SYMBOL),
         mode = safe_get(warp_route, "mode", constants.DEFAULT_WARP_MODE),
@@ -131,7 +162,7 @@ def parse_warp_route(warp_route):
         topology = safe_get(warp_route, "topology", {}),
         token_addresses = safe_get(warp_route, "token_addresses", {}),
         owner = safe_get(warp_route, "owner", ""),
-        initial_liquidity = safe_get(warp_route, "initialLiquidity", [])
+        initial_liquidity = parsed_liquidity
     )
 
 # ============================================================================
@@ -149,13 +180,21 @@ def parse_validator_config(validator):
         Structured validator configuration
     """
     checkpoint_syncer = safe_get(validator, "checkpoint_syncer", {})
+    params = safe_get(checkpoint_syncer, "params", {})
+    
+    # Parse params into a struct
+    parsed_params = struct(
+        path = safe_get(params, "path", ""),
+        bucket = safe_get(params, "bucket", ""),
+        region = safe_get(params, "region", "")
+    )
     
     return struct(
         chain = safe_get(validator, "chain", ""),
         signing_key = safe_get(validator, "signing_key", ""),
         checkpoint_syncer = struct(
             type = safe_get(checkpoint_syncer, "type", constants.CHECKPOINT_SYNCER_LOCAL),
-            params = safe_get(checkpoint_syncer, "params", {})
+            params = parsed_params
         )
     )
 

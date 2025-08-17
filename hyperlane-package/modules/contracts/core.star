@@ -1,7 +1,12 @@
 # Core Contract Deployment Module - Handles Hyperlane core contract deployment
 
-load("../config/constants.star", "get_constants")
-load("../utils/helpers.star", "safe_get", "as_bool", "log_info")
+constants_module = import_module("../config/constants.star")
+get_constants = constants_module.get_constants
+
+helpers_module = import_module("../utils/helpers.star")
+safe_get = helpers_module.safe_get
+as_bool = helpers_module.as_bool
+log_info = helpers_module.log_info
 
 constants = get_constants()
 
@@ -25,10 +30,10 @@ def deploy_core_contracts(plan, chains, deployer_key):
     chains_needing_core = get_chains_needing_core(chains)
     
     if len(chains_needing_core) == 0:
-        log_info("No chains require core deployment")
+        # log_info("No chains require core deployment")
         return False
     
-    log_info("Deploying core contracts to {} chains".format(len(chains_needing_core)))
+    # log_info("Deploying core contracts to {} chains".format(len(chains_needing_core)))
     
     # Execute core deployment
     execute_core_deployment(plan)
@@ -51,7 +56,8 @@ def get_chains_needing_core(chains):
     """
     result = []
     for chain in chains:
-        if as_bool(safe_get(chain, "deploy_core", False), False):
+        deploy_core = getattr(chain, "deploy_core", False)
+        if as_bool(deploy_core, False):
             result.append(chain)
     return result
 
@@ -86,10 +92,12 @@ def generate_core_config(chains):
     core_config = {}
     
     for chain in chains:
-        if as_bool(safe_get(chain, "deploy_core", False), False):
-            core_config[chain["name"]] = struct(
-                chain_id = safe_get(chain, "chain_id", None),
-                rpc_url = chain["rpc_url"],
+        deploy_core = getattr(chain, "deploy_core", False)
+        if as_bool(deploy_core, False):
+            chain_name = getattr(chain, "name", "")
+            core_config[chain_name] = struct(
+                chain_id = getattr(chain, "chain_id", None),
+                rpc_url = getattr(chain, "rpc_url", ""),
                 deploy = True
             )
     

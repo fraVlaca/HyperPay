@@ -1,7 +1,13 @@
 # Warp Route Deployment Module - Handles warp route deployment and liquidity seeding
 
-load("../config/constants.star", "get_constants")
-load("../utils/helpers.star", "safe_get", "join_strings", "log_info", "is_empty")
+constants_module = import_module("../config/constants.star")
+get_constants = constants_module.get_constants
+
+helpers_module = import_module("../utils/helpers.star")
+safe_get = helpers_module.safe_get
+join_strings = helpers_module.join_strings
+log_info = helpers_module.log_info
+is_empty = helpers_module.is_empty
 
 constants = get_constants()
 
@@ -18,10 +24,10 @@ def deploy_warp_routes(plan, warp_routes):
         warp_routes: List of warp route configurations
     """
     if len(warp_routes) == 0:
-        log_info("No warp routes to deploy")
+        # log_info("No warp routes to deploy")
         return
     
-    log_info("Deploying {} warp routes".format(len(warp_routes)))
+    # log_info("Deploying {} warp routes".format(len(warp_routes)))
     
     for route in warp_routes:
         deploy_single_warp_route(plan, route)
@@ -42,7 +48,7 @@ def deploy_single_warp_route(plan, warp_route):
     symbol = safe_get(warp_route, "symbol", constants.DEFAULT_ROUTE_SYMBOL)
     mode = safe_get(warp_route, "mode", constants.DEFAULT_WARP_MODE)
     
-    log_info("Deploying warp route: {} (mode: {})".format(symbol, mode))
+    # log_info("Deploying warp route: {} (mode: {})".format(symbol, mode))
     
     # Build environment variables for the deployment script
     env_vars = "ROUTE_SYMBOL={} MODE={}".format(symbol, mode)
@@ -77,9 +83,7 @@ def seed_route_liquidity(plan, warp_route):
     if is_empty(liquidity_pairs):
         return
     
-    log_info("Seeding initial liquidity for route: {}".format(
-        safe_get(warp_route, "symbol", constants.DEFAULT_ROUTE_SYMBOL)
-    ))
+    # log_info("Seeding initial liquidity for route: {}".format(safe_get(warp_route, "symbol", constants.DEFAULT_ROUTE_SYMBOL)))
     
     # Execute liquidity seeding
     plan.exec(
@@ -143,12 +147,12 @@ def generate_warp_config(warp_route, chains):
     
     # Add chain-specific configuration
     for chain in chains:
-        chain_name = chain["name"]
+        chain_name = getattr(chain, "name", "")
         if chain_name in config.topology:
             config.chains.append(struct(
                 name = chain_name,
                 type = config.topology[chain_name],
-                rpc_url = chain["rpc_url"]
+                rpc_url = getattr(chain, "rpc_url", "")
             ))
     
     return config
@@ -180,7 +184,7 @@ def validate_warp_route(warp_route, chains):
         ))
     
     # Validate topology chains exist
-    chain_names = [chain["name"] for chain in chains]
+    chain_names = [getattr(chain, "name", "") for chain in chains]
     topology = safe_get(warp_route, "topology", {})
     
     for chain_name in topology.keys():

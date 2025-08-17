@@ -11,10 +11,10 @@ ENV NODE_PATH=/opt/hyperlane/node_modules
 # Set working directory
 WORKDIR /work
 
-# Copy deployment scripts from modules
-COPY ../../../modules/contracts/operations/deploy_core.sh /usr/local/bin/deploy_core.sh
-COPY ../../../modules/contracts/operations/warp_routes.sh /usr/local/bin/warp_routes.sh
-COPY ../../../modules/contracts/operations/seed_liquidity.sh /usr/local/bin/seed_liquidity.sh
+# Copy deployment scripts (these need to be copied into build context)
+COPY deploy_core.sh /usr/local/bin/deploy_core.sh
+COPY warp_routes.sh /usr/local/bin/warp_routes.sh
+COPY seed_liquidity.sh /usr/local/bin/seed_liquidity.sh
 
 # Copy utility scripts
 COPY scripts/send_warp.sh /usr/local/bin/send_warp.sh
@@ -22,7 +22,7 @@ COPY scripts/balances.js /usr/local/bin/balances.js
 COPY scripts/parse_txhash.js /usr/local/bin/parse_txhash.js
 
 # Copy common utilities
-COPY ../../../modules/utils/shell/common.sh /usr/local/bin/common.sh
+COPY common.sh /usr/local/bin/common.sh
 
 # Make scripts executable
 RUN chmod +x /usr/local/bin/*.sh

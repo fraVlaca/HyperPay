@@ -1,7 +1,10 @@
 # Agent Infrastructure Module - Manages agent configuration generator service
 
-load("../config/constants.star", "get_constants")
-load("../utils/helpers.star", "log_info")
+constants_module = import_module("../config/constants.star")
+get_constants = constants_module.get_constants
+
+helpers_module = import_module("../utils/helpers.star")
+log_info = helpers_module.log_info
 
 constants = get_constants()
 
@@ -18,7 +21,7 @@ def build_agent_config_service(plan, chains, configs_dir):
         chains: List of chain configurations
         configs_dir: Configs directory artifact
     """
-    log_info("Setting up agent configuration generator")
+    # log_info("Setting up agent configuration generator")
     
     # Generate YAML content for agent config
     yaml_content = generate_chains_yaml(chains)
@@ -63,11 +66,11 @@ def generate_chains_yaml(chains):
     yaml_content = "chains:\n"
     
     for chain in chains:
-        yaml_content += "  - name: {}\n".format(chain["name"])
-        yaml_content += "    rpc_url: {}\n".format(chain["rpc_url"])
+        yaml_content += "  - name: {}\n".format(getattr(chain, "name", ""))
+        yaml_content += "    rpc_url: {}\n".format(getattr(chain, "rpc_url", ""))
         
         # Add existing addresses if available
-        existing = chain.get("existing_addresses", {})
+        existing = getattr(chain, "existing_addresses", {})
         if existing:
             yaml_content += "    existing_addresses:\n"
             for key, value in existing.items():
@@ -116,7 +119,7 @@ def build_agent_config_image():
     """
     return ImageBuildSpec(
         image_name = constants.AGENT_CONFIG_IMAGE_NAME,
-        build_context_dir = "./src/deployments/config-generator",
+        build_context_dir = "../../src/deployments/config-generator",
     )
 
 # ============================================================================

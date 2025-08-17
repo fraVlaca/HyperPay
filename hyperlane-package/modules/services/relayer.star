@@ -1,7 +1,10 @@
 # Relayer Service Module - Builds and manages the relayer service
 
-load("../config/constants.star", "get_constants")
-load("../utils/helpers.star", "log_info")
+constants_module = import_module("../config/constants.star")
+get_constants = constants_module.get_constants
+
+helpers_module = import_module("../utils/helpers.star")
+log_info = helpers_module.log_info
 
 constants = get_constants()
 
@@ -22,7 +25,7 @@ def build_relayer_service(plan, chains, relay_chains, relayer_key, allow_local_s
         agent_image: Docker image for the agent
         configs_dir: Configs directory artifact
     """
-    log_info("Setting up relayer for chains: {}".format(relay_chains))
+    # log_info("Setting up relayer for chains: {}".format(relay_chains))
     
     # Build environment variables
     env_vars = build_relayer_env(relay_chains, relayer_key, allow_local_sync)
@@ -133,8 +136,8 @@ def add_chain_rpcs(command, chains):
     """
     for chain in chains:
         command += " --chains.{}.connection.url {}".format(
-            chain["name"],
-            chain["rpc_url"]
+            getattr(chain, "name", ""),
+            getattr(chain, "rpc_url", "")
         )
     
     return command

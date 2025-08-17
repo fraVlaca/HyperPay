@@ -16,7 +16,11 @@ def safe_get(arg_map, key, default=""):
     Returns:
         Value from map or default
     """
-    return arg_map[key] if key in arg_map else default
+    # Check if it's a dict
+    if type(arg_map) == "dict":
+        return arg_map[key] if key in arg_map else default
+    # Otherwise assume it's a struct and use getattr
+    return getattr(arg_map, key, default)
 
 # ============================================================================
 # TYPE CONVERSION UTILITIES
@@ -56,11 +60,8 @@ def as_int(v, default=0):
     """
     if type(v) == "int":
         return v
-    if type(v) == "string":
-        try:
-            return int(v)
-        except:
-            pass
+    # Note: Starlark doesn't support try/except
+    # Removed try/except block as it's not valid in Starlark
     return default
 
 # ============================================================================
@@ -246,7 +247,10 @@ def log_info(message):
     Args:
         message: Message to log
     """
-    print("[INFO] {}".format(message))
+    # Note: In Kurtosis, we can't use print() directly
+    # The caller should use plan.print() instead
+    # For now, we'll just return the formatted message
+    return "[INFO] {}".format(message)
 
 def log_warning(message):
     """
@@ -255,7 +259,8 @@ def log_warning(message):
     Args:
         message: Message to log
     """
-    print("[WARNING] {}".format(message))
+    # Note: In Kurtosis, we can't use print() directly
+    return "[WARNING] {}".format(message)
 
 def log_debug(message, debug=False):
     """
@@ -266,4 +271,5 @@ def log_debug(message, debug=False):
         debug: Whether debug logging is enabled
     """
     if debug:
-        print("[DEBUG] {}".format(message))
+        return "[DEBUG] {}".format(message)
+    return ""

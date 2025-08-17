@@ -1,7 +1,12 @@
 # Validator Service Module - Builds and manages validator services
 
-load("../config/constants.star", "get_constants")
-load("../utils/helpers.star", "safe_get", "log_info", "find_item")
+constants_module = import_module("../config/constants.star")
+get_constants = constants_module.get_constants
+
+helpers_module = import_module("../utils/helpers.star")
+safe_get = helpers_module.safe_get
+log_info = helpers_module.log_info
+find_item = helpers_module.find_item
 
 constants = get_constants()
 
@@ -20,14 +25,14 @@ def build_validator_service(plan, validator, chains, agent_image, configs_dir):
         agent_image: Docker image for the agent
         configs_dir: Configs directory artifact
     """
-    chain_name = validator["chain"]
+    chain_name = getattr(validator, "chain", "")
     
     # Find the chain configuration
     chain = find_item(chains, "name", chain_name)
     if not chain:
         fail("No configuration found for validator chain: {}".format(chain_name))
     
-    log_info("Setting up validator for chain: {}".format(chain_name))
+    # log_info("Setting up validator for chain: {}".format(chain_name))
     
     # Build environment variables
     env_vars = build_validator_env(validator, chain)
@@ -64,15 +69,15 @@ def build_validator_env(validator, chain):
         Dictionary of environment variables
     """
     base_env = {
-        "VALIDATOR_KEY": validator["signing_key"],
-        "ORIGIN_CHAIN": chain["name"],
-        "RPC_URL": chain["rpc_url"],
+        "VALIDATOR_KEY": getattr(validator, "signing_key", ""),
+        "ORIGIN_CHAIN": getattr(chain, "name", ""),
+        "RPC_URL": getattr(chain, "rpc_url", ""),
         "CONFIG_FILES": "/configs/agent-config.json",
         "RUST_LOG": "debug",
     }
     
     # Add checkpoint syncer configuration
-    syncer_env = build_checkpoint_syncer_env(validator["checkpoint_syncer"])
+    syncer_env = build_checkpoint_syncer_env(getattr(validator, "checkpoint_syncer", struct()))
     
     # Merge environments
     for key, value in syncer_env.items():
@@ -90,8 +95,8 @@ def build_checkpoint_syncer_env(checkpoint_syncer):
     Returns:
         Dictionary of syncer-specific environment variables
     """
-    syncer_type = checkpoint_syncer["type"]
-    params = safe_get(checkpoint_syncer, "params", {})
+    syncer_type = getattr(checkpoint_syncer, "type", "")
+    params = getattr(checkpoint_syncer, "params", struct())
     env = {}
     
     if syncer_type == constants.CHECKPOINT_SYNCER_LOCAL:
@@ -104,12 +109,15 @@ def build_checkpoint_syncer_env(checkpoint_syncer):
     
     elif syncer_type == constants.CHECKPOINT_SYNCER_S3:
         env["CHECKPOINT_SYNCER_TYPE"] = "s3"
-        if "bucket" in params:
-            env["S3_BUCKET"] = str(params["bucket"])
-        if "region" in params:
-            env["S3_REGION"] = str(params["region"])
-        if "prefix" in params:
-            env["S3_PREFIX"] = str(params["prefix"])
+        bucket = safe_get(params, "bucket", "")
+        if bucket:
+            env["S3_BUCKET"] = str(bucket)
+        region = safe_get(params, "region", "")
+        if region:
+            env["S3_REGION"] = str(region)
+        prefix = safe_get(params, "prefix", "")
+        if prefix:
+            env["S3_PREFIX"] = str(prefix)
         if "basePath" in params:
             env["CHECKPOINT_BASE_PATH"] = str(params["basePath"])
     
@@ -170,10 +178,10 @@ def deploy_validators(plan, validators, chains, agent_image, configs_dir):
         configs_dir: Configs directory artifact
     """
     if len(validators) == 0:
-        log_info("No validators to deploy")
+        # log_info("No validators to deploy")
         return
     
-    log_info("Deploying {} validators".format(len(validators)))
+    # log_info("Deploying {} validators".format(len(validators)))
     
     for validator in validators:
         build_validator_service(
