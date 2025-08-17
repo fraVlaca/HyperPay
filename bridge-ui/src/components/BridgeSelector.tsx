@@ -27,6 +27,10 @@ function resolveTokenInfo(registry: UnifiedRegistry, symbol: string, chain: Chai
   const token = registry.tokens.find((t) => t.symbol.toLowerCase() === symbol.toLowerCase());
   const decimals = token?.decimals;
 
+  if (symbol.toLowerCase() === "pyusd" && chain === "optimism") {
+    return { address: "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8", decimals };
+  }
+
   const oft = registry.routes.find(
     (r: any) => r.bridgeType === "OFT" && r.oft.token.toLowerCase() === symbol.toLowerCase()
   );
@@ -86,7 +90,18 @@ export default function BridgeSelector({
     onChange({ ...selection, amount: formatted });
   }
 
-  const options = chains.map((c) => ({ key: c.key, name: c.name }));
+  const options = chains.map((c) => ({
+    key: c.key,
+    name: c.name,
+    iconUrl:
+      c.key === "ethereum"
+        ? "/img/ethereum.png"
+        : c.key === "optimism"
+        ? "/img/optimism.png"
+        : c.key === "arbitrum"
+        ? "/img/arbitrum.png"
+        : undefined
+  }));
 
   return (
     <WidgetCard className="space-y-4">
@@ -104,7 +119,7 @@ export default function BridgeSelector({
           label="From"
           value={selection.origin}
           options={options}
-          onChange={(v) => update({ origin: v as ChainKey })}
+          onChange={(v: string) => update({ origin: v as ChainKey })}
         />
 
         <div className="flex justify-center">
@@ -115,7 +130,7 @@ export default function BridgeSelector({
           label="To"
           value={selection.destination}
           options={options.map((o) => ({ ...o, disabled: o.key === selection.origin }))}
-          onChange={(v) => update({ destination: v as ChainKey })}
+          onChange={(v: string) => update({ destination: v as ChainKey })}
         />
       </div>
 

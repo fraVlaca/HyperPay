@@ -25,7 +25,7 @@ export default function ChainSelect({ label, value, options, onChange }: Props) 
   const current = options.find((o) => o.key === value) || options[0];
 
   return (
-    <div className="w-full" ref={ref}>
+    <div className="w-full relative" ref={ref}>
       <div className="text-xs text-gray-500 mb-1">{label}</div>
       <button
         type="button"
@@ -37,7 +37,12 @@ export default function ChainSelect({ label, value, options, onChange }: Props) 
         aria-expanded={open}
       >
         <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded-full bg-gradient-to-br from-brand-400 to-brand-600" />
+          {current?.iconUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={current.iconUrl} alt="" className="h-5 w-5 rounded-full object-contain" />
+          ) : (
+            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-brand-400 to-brand-600" />
+          )}
           <span className="text-sm font-medium">{current?.name || value}</span>
         </div>
         <svg width="16" height="16" viewBox="0 0 20 20" className={clsx("transition", open ? "rotate-180" : "")}>
@@ -45,7 +50,7 @@ export default function ChainSelect({ label, value, options, onChange }: Props) 
         </svg>
       </button>
       {open && (
-        <div className="mt-1 overflow-hidden rounded-xl border border-black/10 bg-white shadow-lg">
+        <div className="absolute left-0 right-0 mt-1 z-20 overflow-hidden rounded-xl border border-black/10 bg-white shadow-lg">
           {options.map((o) => (
             <button
               key={o.key}
@@ -60,7 +65,12 @@ export default function ChainSelect({ label, value, options, onChange }: Props) 
                 setOpen(false);
               }}
             >
-              <div className="h-4 w-4 rounded-full bg-gradient-to-br from-brand-400 to-brand-600" />
+              {o.iconUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={o.iconUrl} alt="" className="h-4 w-4 rounded-full object-contain" />
+              ) : (
+                <div className="h-4 w-4 rounded-full bg-gradient-to-br from-brand-400 to-brand-600" />
+              )}
               <span>{o.name}</span>
             </button>
           ))}
