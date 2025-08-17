@@ -9,26 +9,26 @@ export function getTokenAddressForBalance(
   symbol: string,
   chain: ChainKey
 ): string | null {
+  const lower = symbol.toLowerCase();
+
   const oft = reg.routes.find(
-    (r): r is Extract<RouteConfig, { bridgeType: "OFT" }> =>
-      r.bridgeType === "OFT" && r.oft.token.toLowerCase() === symbol.toLowerCase()
+    (r): r is Extract<RouteConfig, { bridgeType: "OFT" }> => r.bridgeType === "OFT" && r.oft.token.toLowerCase() === lower
   );
-  if (oft) {
-    const addr = (oft as any)?.oft?.oft?.[chain] as string | undefined;
-    return addr ?? null;
+  const oftAddr = (oft as any)?.oft?.oft?.[chain] as string | undefined;
+  if (oftAddr) {
+    return oftAddr;
   }
 
   const hwr = reg.routes.find(
-    (r): r is Extract<RouteConfig, { bridgeType: "HWR" }> =>
-      r.bridgeType === "HWR" && r.hwr.token.toLowerCase() === symbol.toLowerCase()
+    (r): r is Extract<RouteConfig, { bridgeType: "HWR" }> => r.bridgeType === "HWR" && r.hwr.token.toLowerCase() === lower
   );
   if (hwr) {
     if (chain === "optimism") {
       const synth = (hwr as any)?.hwr?.syntheticToken?.optimism as string | undefined;
-      return synth ?? null;
+      if (synth) return synth;
     }
     const coll = (hwr as any)?.hwr?.collateralTokens?.[chain] as string | undefined;
-    return coll ?? null;
+    if (coll) return coll;
   }
 
   return null;
