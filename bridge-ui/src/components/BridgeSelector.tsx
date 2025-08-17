@@ -114,7 +114,7 @@ export default function BridgeSelector({
         <div className="text-xs text-gray-500 mb-1">Amount</div>
         <div className="flex items-center gap-2">
           <input
-            className="w-full rounded-xl border border-black/10 px-3 py-2 shadow-sm outline-none focus:ring-2 focus:ring-brand-600"
+            className="flex-1 rounded-xl border border-black/10 px-3 py-2 shadow-sm outline-none focus:ring-2 focus:ring-brand-600"
             placeholder="0.0"
             value={selection.amount}
             onChange={(e) => update({ amount: e.target.value })}
@@ -127,6 +127,8 @@ export default function BridgeSelector({
           >
             Max
           </button>
+        </div>
+        <div className="mt-1">
           <BalanceBadge registry={registry} token={pyusdSymbol} origin={selection.origin} />
         </div>
       </div>

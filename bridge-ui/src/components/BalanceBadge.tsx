@@ -26,7 +26,7 @@ export default function BalanceBadge({
   }
   return (
     <span className="rounded bg-brand-50 px-2 py-1 text-xs text-brand-800">
-      Bal: {balance ?? "—"}
+      Balance: {balance ?? "—"}
     </span>
   );
 }
