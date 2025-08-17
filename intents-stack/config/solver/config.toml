@@ -1,0 +1,102 @@
+[solver]
+id = "oif-solver-kurtosis"
+monitoring_timeout_minutes = 5
+
+# ============================================================================
+# NETWORKS - Central configuration for all chains
+# ============================================================================
+[networks.11155111]
+rpc_url = "https://ethereum-sepolia-rpc.publicnode.com"
+input_settler_address = "0xcA919F1EeAA377009E11a5C5c9FA5923fC3eD563"
+output_settler_address = "0x331B0c3b82C8C3CF06DFD2a12905Cc311589FB6D"
+[[networks.11155111.tokens]]
+address = "0x352f1c7ffa598d0698c1D8D2fCAb02511c6fF3e9"
+symbol = "USDC"
+decimals = 6
+[networks.421614]
+rpc_url = "https://api.zan.top/arb-sepolia"
+input_settler_address = "0xCe81010d0A47FF13Cc19105E8Ef7B597aA8D3460"
+output_settler_address = "0x92DAe04879b394104491d5153C36d814bEbcB388"
+[[networks.421614.tokens]]
+address = "0x61714300b991Cfc2BD336cb1745F01463163A988"
+symbol = "USDC"
+decimals = 6
+
+# ============================================================================
+# STORAGE
+# ============================================================================
+[storage]
+primary = "file"
+cleanup_interval_seconds = 3600
+
+[storage.implementations.memory]
+# Memory storage has no configuration
+
+[storage.implementations.file]
+storage_path = "./data/storage"
+ttl_orders = 0
+ttl_intents = 86400
+ttl_order_by_tx_hash = 86400
+
+# ============================================================================
+# ACCOUNT
+# ============================================================================
+[account]
+primary = "local"
+
+[account.implementations.local]
+private_key = ""
+
+# ============================================================================
+# DELIVERY
+# ============================================================================
+[delivery]
+min_confirmations = 1
+
+[delivery.implementations.evm_alloy]
+network_ids = [11155111, 421614]
+
+# ============================================================================
+# DISCOVERY
+# ============================================================================
+[discovery]
+
+[discovery.implementations.onchain_eip7683]
+network_ids = [11155111, 421614]
+
+# ============================================================================
+# ORDER
+# ============================================================================
+[order]
+
+[order.implementations.eip7683]
+
+[order.strategy]
+primary = "simple"
+
+[order.strategy.implementations.simple]
+max_gas_price_gwei = 100
+
+# ============================================================================
+# SETTLEMENT
+# ============================================================================
+[settlement]
+
+[settlement.domain]
+chain_id = 1
+address = "0x0000000000000000000000000000000000000000"
+
+[settlement.implementations.eip7683]
+network_ids = [11155111, 421614]
+oracle_addresses = { eip7683 = "{"network_ids": [11155111, 421614], "oracle_addresses": {11155111: "0xa39434521088d9a50325BC50eC2f50660e06Df34", 421614: "0x7711d06A5F6Fc7772aa109D2231635CEC3850dBa"}}" }
+dispute_period_seconds = 1
+
+# ============================================================================
+# API SERVER
+# ============================================================================
+[api]
+enabled = true
+host = "0.0.0.0"
+port = 3000
+timeout_seconds = 30
+max_request_size = 1048576  # 1MB
