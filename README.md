@@ -23,7 +23,7 @@ HyperPay creates a unified bridging experience by combining Hyperlane Warp Route
 ### Core Architecture Components
 
 - **L Vault (Liquidity Vault)**: Central liquidity management on Optimism - *deployable to any chain as a liquidity hub*
-- **Hyperlane Messaging Layer**: Secure cross-chain communication infrastructure - *spin up on any new chain to enable messaging*
+- **Hyperlane and Layer Zero Messaging Layer**: Secure cross-chain communication infrastructure - *spin up hyperlane on any new chain to enable messaging*
 - **Hyperlane Lock & Mint**: Connects Ethereum and Arbitrum to Optimism via collateral locking and synthetic minting - *modular warp routes deployable to any chain pair*
 - **LayerZero OFT Integration**: Direct ETH ↔ ARB transfers using OFT standard - *composable with any LayerZero-supported chain*
 - **Custody Vaults**: Secure token storage infrastructure - *reusable vault contracts for any token/chain*
