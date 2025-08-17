@@ -104,9 +104,15 @@ export const INPUT_SETTLER_ABI = [
   }
 ] as const;
 
+const INPUT_SETTLERS_STATIC: Partial<Record<ChainKey, string | undefined>> = {
+  ethereum: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_INPUT_SETTLER_ETHEREUM : undefined),
+  arbitrum: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_INPUT_SETTLER_ARBITRUM : undefined),
+  optimism: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_INPUT_SETTLER_OPTIMISM : undefined),
+  base: (typeof process !== "undefined" ? (process as any).env?.NEXT_PUBLIC_INPUT_SETTLER_BASE : undefined),
+};
+
 export function getInputSettlerAddress(origin: ChainKey): `0x${string}` | undefined {
-  const envKey = `NEXT_PUBLIC_INPUT_SETTLER_${origin.toUpperCase()}`;
-  const val = (typeof process !== "undefined" ? (process as any).env?.[envKey] : undefined) as string | undefined;
+  const val = INPUT_SETTLERS_STATIC[origin];
   return val ? (getAddress(val) as `0x${string}`) : undefined;
 }
 
