@@ -132,7 +132,7 @@ def build_cli_image():
     """
     return ImageBuildSpec(
         image_name = constants.CLI_IMAGE_NAME,
-        build_context_dir = "./src/docker/cli",
+        build_context_dir = "./src/deployments/hyperlane-deployer",
     )
 
 # ============================================================================

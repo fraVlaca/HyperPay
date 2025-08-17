@@ -116,7 +116,7 @@ def build_agent_config_image():
     """
     return ImageBuildSpec(
         image_name = constants.AGENT_CONFIG_IMAGE_NAME,
-        build_context_dir = "./src/docker/agent-config",
+        build_context_dir = "./src/deployments/config-generator",
     )
 
 # ============================================================================
