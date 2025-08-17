@@ -2,7 +2,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy only what we need
-COPY hyperlane-package/src/rebalancer/entrypoint.sh /app/entrypoint.sh
+COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Default command uses args passed at runtime, e.g.:

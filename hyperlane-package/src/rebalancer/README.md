@@ -1,13 +1,13 @@
-OFT usage
+Rebalancer (Docker)
 
-- Build image: docker build -t hyperlane-rebalancer:oft ./hyperlane-package/src/rebalancer
-- Prepare a rebalancer config selecting TokenBridgeOft addresses:
-  - See hyperlane-monorepo/typescript/cli/examples/rebalancer.oft.example.json
-- Run via Kurtosis:
-  kurtosis run --enclave <enclave> . --args-file hyperlane-package/src/rebalancer/oft.args.example.yaml
-- Or run Docker directly:
-  docker run --rm -v $(pwd)/config:/config hyperlane-rebalancer:oft --config /config/rebalancer.oft.json
+- Uses Hyperlane monorepo CLI rebalancer.
+- OFT and CCTP supported via config.
 
-# Rebalancer (Docker)
+Build
+docker build -t hyperlane-rebalancer:oft ./hyperlane-package/src/rebalancer
 
-This image runs the Hyperlane rebalancer with support for OFT (LayerZero) and CCTP. Configure via Kurtosis args-file and environment variables. Follow the existing CLI and route creation flows; bridge type is selected via config.
+Run
+docker run --rm -v $(pwd)/config:/config hyperlane-rebalancer:oft /config/rebalancer.json
+
+Config
+See hyperlane-monorepo/typescript/cli/examples/rebalancer.oft.example.json and set per-chain bridge addresses to TokenBridgeOft to enable OFT.
