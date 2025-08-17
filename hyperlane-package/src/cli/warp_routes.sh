@@ -1,48 +1,120 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# Deploy Hyperlane warp routes
 
-if ! command -v hyperlane >/dev/null 2>&1; then
-  npm i -g @hyperlane-xyz/cli@${CLI_VERSION:-latest}
-fi
+# Source common utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/common.sh"
 
-mkdir -p /configs /configs/registry
+# ============================================================================
+# CONSTANTS
+# ============================================================================
 
-route_symbol="${ROUTE_SYMBOL:-route}"
-mode="${MODE:-lock_release}"
+readonly VALID_MODES="lock_release lock_mint burn_mint"
+readonly DEFAULT_ROUTE_SYMBOL="route"
+readonly DEFAULT_MODE="lock_release"
 
-if [ -z "${HYP_KEY:-}" ]; then
-  echo "HYP_KEY not set (agents.deployer.key). Required for warp route operations."; exit 1
-fi
+# ============================================================================
+# VALIDATION
+# ============================================================================
 
-if [ -z "${CHAIN_NAMES:-}" ]; then
-  echo "CHAIN_NAMES not set"; exit 1
-fi
+validate_mode() {
+    local mode="$1"
+    
+    if [[ ! " $VALID_MODES " =~ " $mode " ]]; then
+        log_error "Invalid warp route mode: '$mode'. Valid modes: $VALID_MODES"
+        exit $ERROR_INVALID_CONFIG
+    fi
+}
 
-case "$mode" in
-  lock_release|lock_mint|burn_mint) ;;
-  *) echo "Unknown MODE '$mode'"; exit 2 ;;
-esac
+# ============================================================================
+# WARP ROUTE DEPLOYMENT
+# ============================================================================
 
-stamp="/configs/.done-warp-${route_symbol}-${mode}"
-if [ -f "${stamp}" ]; then
-  echo "warp route ${route_symbol} (${mode}) already configured, skipping"
-else
-  echo "Configuring warp route ${route_symbol} (${mode})"
-  warp_cfg="/configs/warp-${route_symbol}.yaml"
+create_warp_config() {
+    local route_symbol="$1"
+    local config_file="$2"
+    
+    log_info "Creating warp route configuration for symbol: ${route_symbol}"
+    
+    {
+        echo "---"
+        IFS=',' read -r -a chains <<< "${CHAIN_NAMES}"
+        for chain in "${chains[@]}"; do
+            cat <<EOF
+${chain}:
+  type: native
+  name: "${route_symbol}"
+  symbol: "${route_symbol}"
+EOF
+        done
+    } > "$config_file"
+    
+    log_debug "Created warp config at: $config_file"
+}
 
-  {
-    echo "---"
-    IFS=',' read -r -a CHAINS <<< "${CHAIN_NAMES}"
-    for ch in "${CHAINS[@]}"; do
-      echo "${ch}:"
-      echo "  type: native"
-      echo "  name: \"${route_symbol}\""
-      echo "  symbol: \"${route_symbol}\""
-    done
-  } > "${warp_cfg}"
+deploy_warp_route() {
+    local config_file="$1"
+    
+    log_info "Deploying warp route using config: $config_file"
+    
+    if hyperlane warp deploy \
+        --config "$config_file" \
+        -r "$REGISTRY_DIR" \
+        -k "$HYP_KEY" \
+        -y; then
+        log_info "Warp route deployed successfully"
+        return 0
+    else
+        log_error "Failed to deploy warp route"
+        return 1
+    fi
+}
 
-  hyperlane warp deploy --config "${warp_cfg}" -r "/configs/registry" -k "$HYP_KEY" -y
-  touch "${stamp}"
-fi
+# ============================================================================
+# MAIN EXECUTION
+# ============================================================================
 
-touch /configs/.warp-routes
+main() {
+    # Get configuration from environment
+    local route_symbol="${ROUTE_SYMBOL:-$DEFAULT_ROUTE_SYMBOL}"
+    local mode="${MODE:-$DEFAULT_MODE}"
+    
+    # Validate required environment variables
+    require_env_var "HYP_KEY" "HYP_KEY not set (agents.deployer.key). Required for warp route operations."
+    require_env_var "CHAIN_NAMES" "CHAIN_NAMES not set"
+    
+    # Validate mode
+    validate_mode "$mode"
+    
+    # Install CLI if needed
+    ensure_hyperlane_cli
+    
+    # Create necessary directories
+    ensure_directories "$CONFIGS_DIR" "$REGISTRY_DIR"
+    
+    # Check if already deployed
+    local stamp_file="${CONFIGS_DIR}/.done-warp-${route_symbol}-${mode}"
+    if check_stamp_file "$stamp_file"; then
+        log_info "Warp route ${route_symbol} (${mode}) already configured, skipping"
+        exit 0
+    fi
+    
+    # Create warp configuration
+    local warp_config="${CONFIGS_DIR}/warp-${route_symbol}.yaml"
+    create_warp_config "$route_symbol" "$warp_config"
+    
+    # Deploy warp route
+    if deploy_warp_route "$warp_config"; then
+        create_stamp_file "$stamp_file"
+        log_info "Warp route ${route_symbol} (${mode}) deployment completed"
+    else
+        log_error "Warp route deployment failed"
+        exit $ERROR_DEPLOYMENT_FAILED
+    fi
+    
+    # Mark warp routes as complete
+    create_stamp_file "${CONFIGS_DIR}/.warp-routes"
+}
+
+# Run main function
+main "$@"

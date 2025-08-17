@@ -1,127 +1,183 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# Deploy Hyperlane core contracts to specified chains
 
-if ! command -v hyperlane >/dev/null 2>&1; then
-  npm i -g @hyperlane-xyz/cli@${CLI_VERSION:-latest}
-fi
+# Source common utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/common.sh"
 
-mkdir -p /configs /configs/registry/chains
+# ============================================================================
+# MAIN DEPLOYMENT LOGIC
+# ============================================================================
 
-if [ -z "${CHAIN_NAMES:-}" ]; then
-  echo "CHAIN_NAMES not set"; exit 1
-fi
-
-if [ -z "${HYP_KEY:-}" ]; then
-  echo "HYP_KEY not set (agents.deployer.key). Required for core deployment."; exit 1
-fi
-
-declare -A RPCS=()
-if [ -n "${CHAIN_RPCS:-}" ]; then
-  IFS=',' read -r -a PAIRS <<< "${CHAIN_RPCS}"
-  for p in "${PAIRS[@]}"; do
-    k="${p%%=*}"
-    v="${p#*=}"
-    RPCS["$k"]="$v"
-  done
-fi
-
-declare -A IDS=()
-if [ -n "${CHAIN_IDS:-}" ]; then
-  IFS=',' read -r -a IPAIRS <<< "${CHAIN_IDS}"
-  for p in "${IPAIRS[@]}"; do
-    k="${p%%=*}"
-    v="${p#*=}"
-    IDS["$k"]="$v"
-  done
-fi
-
-IFS=',' read -r -a CHAINS <<< "${CHAIN_NAMES}"
-for ch in "${CHAINS[@]}"; do
-  stamp="/configs/.done-core-${ch}"
-  if [ -f "${stamp}" ]; then
-    echo "core already deployed for ${ch}, skipping"
-    continue
-  fi
-
-  rpc="${RPCS[$ch]:-}"
-  if [ -z "$rpc" ]; then
-    echo "error: no RPC provided for chain ${ch}"; exit 1
-  fi
-
-  reg_chain_dir="/configs/registry/chains/${ch}"
-  mkdir -p "${reg_chain_dir}"
-
-  echo "Detecting chainId for ${ch} via eth_chainId on ${rpc}"
-  detected_cid="$(node -e "const https=require('https');const u=process.argv[1];const req=https.request(u,{method:'POST',headers:{'content-type':'application/json'}},res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{try{const j=JSON.parse(d); if(!j || !j.result){process.exit(2)}; const n=parseInt(j.result,16); if(!Number.isFinite(n)){process.exit(3)}; console.log(n);}catch(e){process.exit(1)}})});req.on('error',()=>process.exit(1));req.write(JSON.stringify({jsonrpc:'2.0',method:'eth_chainId',params:[],id:1}));req.end();" "$rpc" || true)"
-  if [ -n "${detected_cid:-}" ]; then
-    cid="${detected_cid}"
-    echo "Using detected chainId ${cid} for ${ch}"
-  else
-    cid="${IDS[$ch]:-}"
-    if [ -z "$cid" ]; then
-      echo "error: could not detect chainId from RPC and CHAIN_IDS missing id for ${ch}"; exit 1
+deploy_core_to_chain() {
+    local chain_name="$1"
+    local rpc_url="$2"
+    local chain_id="$3"
+    local stamp_file="${CONFIGS_DIR}/.done-core-${chain_name}"
+    
+    # Check if already deployed
+    if check_stamp_file "$stamp_file"; then
+        log_info "Core already deployed for ${chain_name}, skipping"
+        return 0
     fi
-    echo "Falling back to provided chainId ${cid} for ${ch}"
-  fi
+    
+    # Setup registry directory for this chain
+    local reg_chain_dir="${REGISTRY_DIR}/chains/${chain_name}"
+    ensure_directories "$reg_chain_dir"
+    
+    # Create chain metadata
+    create_chain_metadata "$chain_name" "$rpc_url" "$chain_id" "$reg_chain_dir"
+    
+    # Initialize core configuration
+    local core_cfg="${CONFIGS_DIR}/core-${chain_name}.yaml"
+    if ! initialize_core_config "$core_cfg"; then
+        log_error "Failed to initialize core config for ${chain_name}"
+        exit $ERROR_DEPLOYMENT_FAILED
+    fi
+    
+    # Deploy core contracts with retry logic
+    if deploy_core_with_retry "$chain_name" "$core_cfg"; then
+        # Copy deployment artifacts
+        copy_deployment_artifacts "$chain_name" "$reg_chain_dir"
+        create_stamp_file "$stamp_file"
+        log_info "Successfully deployed core contracts to ${chain_name}"
+    else
+        log_error "Failed to deploy core contracts to ${chain_name}"
+        exit $ERROR_DEPLOYMENT_FAILED
+    fi
+}
 
-  cat > "${reg_chain_dir}/metadata.yaml" <<EOF
-name: ${ch}
+create_chain_metadata() {
+    local chain_name="$1"
+    local rpc_url="$2"
+    local chain_id="$3"
+    local output_dir="$4"
+    
+    cat > "${output_dir}/metadata.yaml" <<EOF
+name: ${chain_name}
 protocol: ethereum
-chainId: ${cid}
-domainId: ${cid}
+chainId: ${chain_id}
+domainId: ${chain_id}
 rpcUrls:
-  - http: ${rpc}
+  - http: ${rpc_url}
 nativeToken:
   name: Ether
   symbol: ETH
   decimals: 18
 EOF
+    
+    log_debug "Created metadata for ${chain_name}"
+}
 
-  core_cfg="/configs/core-${ch}.yaml"
-
-  echo "Initializing core config for ${ch}"
-  yes "" | hyperlane core init -y || true
-  if [ -f "./configs/core-config.yaml" ]; then
-    cp "./configs/core-config.yaml" "${core_cfg}"
-  else
-    echo "error: core init did not produce ./configs/core-config.yaml"; exit 1
-  fi
-
-  echo "Deploying Hyperlane core to ${ch} using local registry only"
-  
-  # Retry deployment up to 3 times on nonce errors
-  max_retries=3
-  retry_count=0
-  deployment_success=false
-  
-  while [ $retry_count -lt $max_retries ] && [ "$deployment_success" = "false" ]; do
-    if hyperlane core deploy --chain "${ch}" -o "${core_cfg}" -r "/configs/registry" -k "$HYP_KEY" -y 2>&1 | tee /tmp/deploy-${ch}.log; then
-      deployment_success=true
-      echo "Successfully deployed core contracts to ${ch}"
+initialize_core_config() {
+    local config_file="$1"
+    
+    log_info "Initializing core config"
+    
+    # Use yes to provide empty responses to prompts
+    yes "" | hyperlane core init -y > /dev/null 2>&1 || true
+    
+    if [ -f "./configs/core-config.yaml" ]; then
+        cp "./configs/core-config.yaml" "$config_file"
+        return 0
     else
-      if grep -q "nonce has already been used\|nonce too low" /tmp/deploy-${ch}.log; then
-        retry_count=$((retry_count + 1))
-        echo "Nonce error detected, retrying deployment (attempt $retry_count of $max_retries)..."
-        # Wait a bit before retrying to allow pending transactions to settle
-        sleep 5
-      else
-        echo "Deployment failed with non-nonce error, exiting"
-        cat /tmp/deploy-${ch}.log
-        exit 1
-      fi
+        log_error "Core init did not produce expected config file"
+        return 1
     fi
-  done
-  
-  if [ "$deployment_success" = "false" ]; then
-    echo "Failed to deploy after $max_retries attempts"
-    exit 1
-  fi
+}
 
-  if [ -f "$HOME/.hyperlane/chains/${ch}/addresses.yaml" ]; then
-    cp "$HOME/.hyperlane/chains/${ch}/addresses.yaml" "${reg_chain_dir}/addresses.yaml" || true
-  fi
+deploy_core_with_retry() {
+    local chain_name="$1"
+    local config_file="$2"
+    local log_file="/tmp/deploy-${chain_name}.log"
+    
+    log_info "Deploying Hyperlane core to ${chain_name}"
+    
+    # Define the deployment command
+    local deploy_cmd="hyperlane core deploy --chain '${chain_name}' -o '${config_file}' -r '${REGISTRY_DIR}' -k '${HYP_KEY}' -y 2>&1 | tee '${log_file}'"
+    
+    # Try deployment with retry on nonce errors
+    local attempt=0
+    while [ $attempt -lt $MAX_RETRY_ATTEMPTS ]; do
+        attempt=$((attempt + 1))
+        
+        if eval "$deploy_cmd"; then
+            return 0
+        fi
+        
+        # Check for nonce errors
+        if grep -q "nonce has already been used\|nonce too low" "$log_file"; then
+            if [ $attempt -lt $MAX_RETRY_ATTEMPTS ]; then
+                log_info "Nonce error detected, retrying (attempt $attempt/$MAX_RETRY_ATTEMPTS)..."
+                sleep $RETRY_DELAY
+            fi
+        else
+            log_error "Deployment failed with non-recoverable error"
+            cat "$log_file"
+            return 1
+        fi
+    done
+    
+    log_error "Deployment failed after $MAX_RETRY_ATTEMPTS attempts"
+    return 1
+}
 
-  touch "${stamp}"
-done
+copy_deployment_artifacts() {
+    local chain_name="$1"
+    local target_dir="$2"
+    local addresses_file="$HOME/.hyperlane/chains/${chain_name}/addresses.yaml"
+    
+    if [ -f "$addresses_file" ]; then
+        cp "$addresses_file" "${target_dir}/addresses.yaml" || true
+        log_debug "Copied deployment artifacts for ${chain_name}"
+    fi
+}
 
-touch /configs/.deploy-core
+# ============================================================================
+# MAIN EXECUTION
+# ============================================================================
+
+main() {
+    # Validate required environment variables
+    require_env_var "CHAIN_NAMES" "CHAIN_NAMES not set"
+    require_env_var "HYP_KEY" "HYP_KEY not set (agents.deployer.key). Required for core deployment."
+    
+    # Install CLI if needed
+    ensure_hyperlane_cli
+    
+    # Create necessary directories
+    ensure_directories "$CONFIGS_DIR" "${REGISTRY_DIR}/chains"
+    
+    # Parse chain configurations
+    declare -A RPCS
+    declare -A IDS
+    parse_key_value_pairs "${CHAIN_RPCS:-}" RPCS
+    parse_key_value_pairs "${CHAIN_IDS:-}" IDS
+    
+    # Deploy to each chain
+    IFS=',' read -r -a CHAINS <<< "${CHAIN_NAMES}"
+    for chain in "${CHAINS[@]}"; do
+        # Validate chain name
+        validate_chain_name "$chain"
+        
+        # Get RPC URL
+        rpc="${RPCS[$chain]:-}"
+        if [ -z "$rpc" ]; then
+            log_error "No RPC URL provided for chain ${chain}"
+            exit $ERROR_MISSING_ENV
+        fi
+        
+        # Get or detect chain ID
+        chain_id=$(get_chain_id "$chain" "$rpc" "${IDS[$chain]:-}")
+        
+        # Deploy core to this chain
+        deploy_core_to_chain "$chain" "$rpc" "$chain_id"
+    done
+    
+    # Mark overall deployment as complete
+    create_stamp_file "${CONFIGS_DIR}/.deploy-core"
+    log_info "Core deployment completed for all chains"
+}
+
+# Run main function
+main "$@"
