@@ -8,7 +8,7 @@ mode:
     git_ref: main
   solver:
     build_from_source: false
-    image: oif-solver:local-fixed-v7  # Use locally built image with nonce + discovery + fill encoding fix
+    image: fravlaca/oif-solver:0.0.1 # Includes Hyperlane dispatch recipientOracle=origin fix  # Use locally built image with nonce + discovery + fill encoding fix
     git_ref: main
   specs:
     enabled: false  # Disable for E2E test
