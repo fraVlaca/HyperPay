@@ -47,6 +47,12 @@ export default function Home() {
     });
     return res;
   }, [registry, selection]);
+  useEffect(() => {
+    if (step === 2 && detection?.bridge === "HWR" && extraSources.length === 0) {
+      setExtraSources([{ chain: selection.origin, amount: selection.amount || "" }]);
+    }
+  }, [step, detection?.bridge]);
+
 
   if (!registry) {
     return (

@@ -6,6 +6,7 @@ import WidgetCard from "./ui/WidgetCard";
 import TokenBadge from "./ui/TokenBadge";
 import ChainSelect from "./ui/ChainSelect";
 import { useTokenBalance } from "../hooks/useTokenBalance";
+import { getDecimals, getTokenAddressForBalance } from "@lib/tokenAddressResolver";
 
 type Selection = {
   token: string;
@@ -23,32 +24,6 @@ type Props = {
   onAddSource?: () => void;
 };
 
-function resolveTokenInfo(registry: UnifiedRegistry, symbol: string, chain: ChainKey) {
-  const token = registry.tokens.find((t) => t.symbol.toLowerCase() === symbol.toLowerCase());
-  const decimals = token?.decimals;
-
-  if (symbol.toLowerCase() === "pyusd" && chain === "optimism") {
-    return { address: "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8", decimals };
-  }
-
-  const oft = registry.routes.find(
-    (r: any) => r.bridgeType === "OFT" && r.oft.token.toLowerCase() === symbol.toLowerCase()
-  );
-  if (oft) {
-    const addr = (oft as any)?.oft?.oft?.[chain] as string | undefined;
-    return { address: addr ?? null, decimals };
-  }
-
-  const hwr = registry.routes.find(
-    (r: any) => r.bridgeType === "HWR" && r.hwr.token.toLowerCase() === symbol.toLowerCase()
-  );
-  if (hwr) {
-    const addr = (hwr as any)?.hwr?.routers?.[chain] as string | undefined;
-    return { address: addr ?? null, decimals };
-  }
-
-  return { address: null as string | null, decimals };
-}
 
 export default function BridgeSelector({
   registry,
@@ -63,6 +38,9 @@ export default function BridgeSelector({
   );
   const pyusdSymbol =
     registry.tokens.find((t) => t.symbol.toLowerCase() === "pyusd")?.symbol || "PYUSD";
+  const decimals = getDecimals(registry, pyusdSymbol);
+  const tokenAddr = getTokenAddressForBalance(registry, pyusdSymbol, selection.origin);
+  const { raw } = useTokenBalance({ tokenAddress: (tokenAddr as any) || null, decimals });
 
   function update(partial: Partial<Selection>) {
     onChange({ ...selection, ...partial });
@@ -77,8 +55,6 @@ export default function BridgeSelector({
     });
   }
 
-  const { address: tokenAddr, decimals } = resolveTokenInfo(registry, pyusdSymbol, selection.origin);
-  const { raw } = useTokenBalance({ tokenAddress: (tokenAddr as any) || null, decimals });
 
   function setMax() {
     if (!raw || !decimals) return;
