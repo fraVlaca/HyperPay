@@ -42,7 +42,7 @@ export default function BalanceBadge({
   });
 
   if (!isConnected) {
-    return <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">Connect wallet</span>;
+    return null;
   }
   if (!address) {
     return <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">Balance unavailable</span>;
