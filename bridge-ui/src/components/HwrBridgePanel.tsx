@@ -40,14 +40,6 @@ export default function HwrBridgePanel({
         </Card>
       </div>
 
-      {destination === "optimism" && (
-        <div className="mt-4 rounded-xl border border-black/10 p-4">
-          <div className="mb-2 text-sm font-medium">
-            Multi-source send (Ethereum + Arbitrum → Optimism)
-          </div>
-          <MultiSourceToOp registry={registry} token={token} destination={destination} />
-        </div>
-      )}
     </div>
   );
 }
