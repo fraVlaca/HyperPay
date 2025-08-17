@@ -7,6 +7,7 @@ import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { mainnet, arbitrum, optimism } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
+import Head from "next/head";
 
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_ID || "demo";
 
@@ -37,6 +38,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
           <SkateboardProvider>
+            <Head>
+              <link rel="icon" href="/favicon.ico" />
+            </Head>
             <Header />
             <SkaterBackground />
             <Component {...pageProps} />

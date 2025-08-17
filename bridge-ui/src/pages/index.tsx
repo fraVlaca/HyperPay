@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChainKey, UnifiedRegistry } from "@config/types";
 import { loadRegistry, readLastSelection, saveLastSelection } from "@lib/registryLoader";
 import { detectRoute } from "@lib/routeDetector";
@@ -48,10 +48,28 @@ export default function Home() {
     return res;
   }, [registry, selection]);
   useEffect(() => {
-    if (step === 2 && detection?.bridge === "HWR" && extraSources.length === 0) {
+    if (step === 1) {
       setExtraSources([{ chain: selection.origin, amount: selection.amount || "" }]);
     }
-  }, [step, detection?.bridge]);
+  }, [step, selection.origin, selection.amount]);
+
+  useEffect(() => {
+    if (step !== 2) return;
+    if (detection?.bridge === "HWR") {
+      setExtraSources([{ chain: selection.origin, amount: selection.amount || "" }]);
+    } else if (extraSources.length) {
+      setExtraSources([]);
+    }
+  }, [step, detection?.bridge, selection.origin, selection.amount, selection.destination]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        console.debug("[sources-debug]", { step, origin: selection.origin, amount: selection.amount, extraSources });
+      } catch {}
+    }
+  }, [step, selection.origin, selection.amount, extraSources]);
+
 
 
   if (!registry) {
@@ -100,7 +118,10 @@ export default function Home() {
               className={`w-full rounded-xl px-4 py-2.5 text-sm text-white transition ${
                 canProceed ? "bg-brand-700 hover:bg-brand-800" : "bg-gray-300"
               }`}
-              onClick={() => setStep(2)}
+              onClick={() => {
+                setExtraSources([{ chain: selection.origin, amount: selection.amount || "" }]);
+                setStep(2);
+              }}
             >
               Next
             </button>
@@ -108,7 +129,9 @@ export default function Home() {
         )}
 
         {step === 2 && (
-          <div className="space-y-4 animate-[fadeIn_.25s_cubic-bezier(0.22,1,0.36,1)]">
+          <div
+            key={`step2-${selection.origin}-${selection.destination}-${selection.amount}-${extraSources.length}`}
+            className="space-y-4 animate-[fadeIn_.25s_cubic-bezier(0.22,1,0.36,1)]">
             <div className="flex justify-between">
               <button
                 className="rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
@@ -122,6 +145,7 @@ export default function Home() {
               <WidgetCard className="space-y-4">
                 {detection.supportsMultiSource ? (
                   <MultiSourcePanel
+                    key={`${selection.origin}-${selection.destination}-${selection.amount}-${extraSources.length}`}
                     registry={registry}
                     token={selection.token}
                     destination={selection.destination}
