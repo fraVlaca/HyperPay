@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { toast } from "react-toastify";
 import { sendOft } from "@lib/oftSend";
 import { getDevWalletClient } from "@lib/wallet";
+import { useSkateboard } from "@lib/skateboard";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -31,6 +32,7 @@ export default function OftTransferForm({
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [busy, setBusy] = useState(false);
+  const { show, hide } = useSkateboard();
 
   const cfg = useMemo(() => {
     const route = registry.routes.find(
@@ -43,7 +45,7 @@ export default function OftTransferForm({
 
   return (
     <div className="space-y-3">
-      <div className="rounded-md border bg-gray-50 p-3 text-xs text-gray-700">
+      <div className="rounded-xl border bg-gray-50 p-3 text-xs text-gray-700">
         <div>Token: {token}</div>
         <div>
           Route: {origin} -&gt; {destination}
@@ -54,13 +56,14 @@ export default function OftTransferForm({
       <button
         disabled={busy}
         className={clsx(
-          "w-full rounded-md px-3 py-2 text-sm text-white",
+          "w-full rounded-xl px-4 py-2.5 text-sm text-white",
           busy ? "bg-gray-700" : "bg-gray-900",
           busy && "opacity-50"
         )}
         onClick={async () => {
           try {
             setBusy(true);
+            show();
             let client = walletClient;
             let fromAddr = address;
             if (!client || !fromAddr) {
@@ -68,6 +71,7 @@ export default function OftTransferForm({
               if (!devClient) {
                 toast.error("Connect a wallet first");
                 setBusy(false);
+                hide();
                 return;
               }
               // @ts-ignore
@@ -79,6 +83,7 @@ export default function OftTransferForm({
             if (expectedChainId && (client as any)?.chain && (client as any).chain.id !== expectedChainId) {
               toast.error(`Switch wallet to ${origin} to send`);
               setBusy(false);
+              hide();
               return;
             }
             const { hash } = await sendOft({

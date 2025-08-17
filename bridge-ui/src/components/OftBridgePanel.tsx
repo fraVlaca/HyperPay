@@ -17,7 +17,7 @@ export default function OftBridgePanel({
   amount
 }: Props) {
   return (
-    <div className="rounded-lg border border-gray-200 p-4">
+    <div className="rounded-xl border border-black/10 p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-medium">LayerZero OFT</h3>
       </div>

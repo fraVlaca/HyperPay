@@ -74,18 +74,18 @@ export default function MultiSourceToOp({ registry, token, destination }: Props)
     <div className="space-y-3">
       <div className="text-sm text-gray-600">Send from multiple sources to Optimism</div>
       <div className="grid grid-cols-1 gap-3">
-        <div className="rounded-md border p-3">
+        <div className="rounded-xl border p-3">
           <div className="mb-1 text-xs text-gray-500">From Ethereum</div>
           <input
             value={amountEth}
             onChange={(e) => setAmountEth(e.target.value)}
             placeholder="0.00"
-            className="w-full rounded-md border px-3 py-2 text-sm"
+            className="w-full rounded-xl border px-3 py-2 text-sm"
           />
           {!ethOk && <div className="mt-1 text-xs text-red-500">No HWR route from Ethereum → {destination}</div>}
           <button
             disabled={!ethOk || !amountEth || Number(amountEth) <= 0 || busy !== "idle"}
-            className="mt-2 w-full rounded-md px-3 py-2 text-sm text-white disabled:opacity-50 bg-gray-900"
+            className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm text-white disabled:opacity-50 bg-gray-900"
             onClick={async () => {
               if (!ethOk) return;
               try {
@@ -104,18 +104,18 @@ export default function MultiSourceToOp({ registry, token, destination }: Props)
           </button>
         </div>
 
-        <div className="rounded-md border p-3">
+        <div className="rounded-xl border p-3">
           <div className="mb-1 text-xs text-gray-500">From Arbitrum</div>
           <input
             value={amountArb}
             onChange={(e) => setAmountArb(e.target.value)}
             placeholder="0.00"
-            className="w-full rounded-md border px-3 py-2 text-sm"
+            className="w-full rounded-xl border px-3 py-2 text-sm"
           />
           {!arbOk && <div className="mt-1 text-xs text-red-500">No HWR route from Arbitrum → {destination}</div>}
           <button
             disabled={!arbOk || !amountArb || Number(amountArb) <= 0 || busy !== "idle"}
-            className="mt-2 w-full rounded-md px-3 py-2 text-sm text-white disabled:opacity-50 bg-gray-900"
+            className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm text-white disabled:opacity-50 bg-gray-900"
             onClick={async () => {
               if (!arbOk) return;
               try {
@@ -137,7 +137,7 @@ export default function MultiSourceToOp({ registry, token, destination }: Props)
 
       <button
         disabled={!canSubmit || busy !== "idle"}
-        className="w-full rounded-md bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+        className="w-full rounded-xl bg-gray-900 px-4 py-2.5 text-sm text-white disabled:opacity-50"
         onClick={async () => {
           try {
             if (Number(amountEth || "0") > 0 && ethOk) {
