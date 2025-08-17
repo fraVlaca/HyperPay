@@ -2,33 +2,31 @@
 
 const { ethers } = require('ethers');
 
-// Configuration (Mainnet -> Arbitrum One)
-// You can override RPCs/PK via env: USER_PK, MAINNET_RPC, ARB_RPC
-const USER_PRIVATE_KEY = process.env.USER_PK || '0xe31b8d349b5c2f249d37f8a4d2b1fc4892ff159ac11ea62c66fb18ca4a298d38';
+// Configuration
+const USER_PRIVATE_KEY = '0xd32b4f4ee569fefe3caa3bce14a7504de18b6153feecb4672734b818e79220d7';
 
 const CHAINS = {
-  mainnet: {
-    chainId: 1,
-    rpc: process.env.MAINNET_RPC || 'https://eth-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk',
-    token: '0x6c3ea9036406852006290770BEdFcAbA0e23A0e8', // PYUSD
-    inputSettler: '0x00E846027c83b4c6238F2E34F12d3679BbaCc448',
-    hyperlaneOracle: '0x95A0b66371d2cF28F312192D662e4b627eB88155'
+  sepolia: {
+    chainId: 11155111,
+    rpc: 'https://ethereum-sepolia-rpc.publicnode.com',
+    weth: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
+    inputSettler: '0xcA919F1EeAA377009E11a5C5c9FA5923fC3eD563',
+    hyperlaneOracle: '0xa39434521088d9a50325BC50eC2f50660e06Df34'
   },
   arbitrum: {
-    chainId: 42161,
-    rpc: process.env.ARB_RPC || 'https://arb1.arbitrum.io/rpc',
-    token: '0x46850aD61C2B7d64d08c9C754F45254596696984', // PYUSD on Arbitrum One
-    outputSettler: '0x95A0b66371d2cF28F312192D662e4b627eB88155',
-    hyperlaneOracle: '0x77818DE6a93f0335E9A5817314Bb1e879d319C6F'
+    chainId: 421614,
+    rpc: 'https://sepolia-rollup.arbitrum.io/rpc',
+    weth: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73',
+    outputSettler: '0x92DAe04879b394104491d5153C36d814bEbcB388',
+    hyperlaneOracle: '0x7711d06A5F6Fc7772aa109D2231635CEC3850dBa'
   }
 };
 
 // Contract ABIs
-const ERC20_ABI = [
+const WETH_ABI = [
   'function balanceOf(address) view returns (uint256)',
   'function approve(address spender, uint256 amount) returns (bool)',
-  'function allowance(address owner, address spender) view returns (uint256)',
-  'function decimals() view returns (uint8)'
+  'function allowance(address owner, address spender) view returns (uint256)'
 ];
 
 const INPUT_SETTLER_ABI = [
@@ -45,66 +43,49 @@ function addressToBytes32(address) {
 async function main() {
   console.log('🚀 Submitting Proper OIF Intent');
   console.log('================================\n');
+
   const wallet = new ethers.Wallet(USER_PRIVATE_KEY);
-  const provider = new ethers.providers.JsonRpcProvider(CHAINS.mainnet.rpc);
-  const providerArb = new ethers.providers.JsonRpcProvider(CHAINS.arbitrum.rpc);
+  const provider = new ethers.providers.JsonRpcProvider(CHAINS.sepolia.rpc);
   const signer = wallet.connect(provider);
   
   console.log(`User: ${wallet.address}\n`);
 
   // Contract instances
-  const originToken = new ethers.Contract(CHAINS.mainnet.token, ERC20_ABI, signer);
-  const destTokenReader = new ethers.Contract(CHAINS.arbitrum.token, ERC20_ABI, providerArb);
-  const inputSettler = new ethers.Contract(CHAINS.mainnet.inputSettler, INPUT_SETTLER_ABI, signer);
+  const weth = new ethers.Contract(CHAINS.sepolia.weth, WETH_ABI, signer);
+  const inputSettler = new ethers.Contract(CHAINS.sepolia.inputSettler, INPUT_SETTLER_ABI, signer);
 
   // Check balances
-  const [originDecimals, destDecimals] = await Promise.all([
-    originToken.decimals(),
-    destTokenReader.decimals(),
-  ]);
-
-  const tokenBalance = await originToken.balanceOf(wallet.address);
-  console.log(`Origin token balance: ${ethers.utils.formatUnits(tokenBalance, originDecimals)}`);
+  const wethBalance = await weth.balanceOf(wallet.address);
+  console.log(`WETH balance: ${ethers.utils.formatEther(wethBalance)}`);
 
   // Ensure approval
-  const currentAllowance = await originToken.allowance(wallet.address, CHAINS.mainnet.inputSettler);
+  const currentAllowance = await weth.allowance(wallet.address, CHAINS.sepolia.inputSettler);
   if (currentAllowance.lt(ethers.constants.MaxUint256)) {
     console.log('Setting approval...');
-    const approveTx = await originToken.approve(CHAINS.mainnet.inputSettler, ethers.constants.MaxUint256);
+    const approveTx = await weth.approve(CHAINS.sepolia.inputSettler, ethers.constants.MaxUint256);
     await approveTx.wait();
     console.log('✅ Approval set\n');
   }
 
   // Create StandardOrder
   const now = Math.floor(Date.now() / 1000);
-  // Amounts, expressed in human units and converted using token decimals
-  const INPUT_AMOUNT = '0.001';
-  const OUTPUT_AMOUNT = '0.0009';
-  const inputAmount = ethers.utils.parseUnits(INPUT_AMOUNT, originDecimals);
-  const outputAmount = ethers.utils.parseUnits(OUTPUT_AMOUNT, destDecimals);
-
-  if (tokenBalance.lt(inputAmount)) {
-    console.error(`Insufficient ${INPUT_AMOUNT} origin token. Balance: ${ethers.utils.formatUnits(tokenBalance, originDecimals)} required: ${INPUT_AMOUNT}`);
-    process.exit(1);
-  }
-
   const standardOrder = {
     user: wallet.address,
     nonce: Date.now(), // Simple nonce
-    originChainId: CHAINS.mainnet.chainId,
+    originChainId: CHAINS.sepolia.chainId,
     expires: now + 7200, // 2 hours expiry
     fillDeadline: now + 3600, // 1 hour to fill
-    inputOracle: CHAINS.mainnet.hyperlaneOracle,
+    inputOracle: CHAINS.sepolia.hyperlaneOracle,
     inputs: [
-      [CHAINS.mainnet.token, inputAmount]
+      [CHAINS.sepolia.weth, ethers.utils.parseEther('0.001')] // 0.001 WETH input
     ],
     outputs: [
       {
         oracle: addressToBytes32(CHAINS.arbitrum.hyperlaneOracle),
         settler: addressToBytes32(CHAINS.arbitrum.outputSettler),
         chainId: CHAINS.arbitrum.chainId,
-        token: addressToBytes32(CHAINS.arbitrum.token),
-        amount: outputAmount, // example with ~10% fee
+        token: addressToBytes32(CHAINS.arbitrum.weth),
+        amount: ethers.utils.parseEther('0.0009'), // 0.0009 WETH output (10% fee)
         recipient: addressToBytes32(wallet.address),
         call: '0x', // Empty callback
         context: '0x' // Empty context
@@ -114,8 +95,8 @@ async function main() {
 
   console.log('Order details:');
   console.log(`- User: ${standardOrder.user}`);
-  console.log(`- Input: ${INPUT_AMOUNT} PYUSD on Mainnet`);
-  console.log(`- Output: ${OUTPUT_AMOUNT} PYUSD on Arbitrum One`);
+  console.log(`- Input: 0.001 WETH on Sepolia`);
+  console.log(`- Output: 0.0009 WETH on Arbitrum`);
   console.log(`- Fill deadline: ${new Date(standardOrder.fillDeadline * 1000).toISOString()}`);
   console.log(`- Expires: ${new Date(standardOrder.expires * 1000).toISOString()}\n`);
 
