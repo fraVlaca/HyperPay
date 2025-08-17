@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+
 export default function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-black/5 bg-white/80 backdrop-blur">
@@ -15,7 +17,7 @@ export default function Header() {
           />
           <span className="text-lg font-semibold tracking-tight">HyperPay</span>
         </Link>
-        <div className="text-xs text-gray-500">Bridge PyUSD fast</div>
+        <ConnectButton />
       </div>
     </header>
   );

@@ -7,10 +7,12 @@ html, body, #__next {
 }
 
 body {
-  --bg-a: rgba(91, 60, 196, 0.12);
-  --bg-b: rgba(141, 116, 229, 0.08);
+  --bg-a: rgba(255, 255, 255, 0.85);
+  --bg-b: rgba(250, 250, 255, 0.75);
   background:
-    radial-gradient(1000px 500px at 50% -200px, var(--bg-a), transparent 60%) no-repeat,
-    radial-gradient(800px 400px at 90% 10%, var(--bg-b), transparent 60%) no-repeat,
-    #fafafa;
+    linear-gradient(0deg, var(--bg-a), var(--bg-a)),
+    url("/img/background.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }

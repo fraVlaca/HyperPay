@@ -72,7 +72,7 @@ export default function Home() {
     <div className="min-h-screen p-6 flex items-start justify-center md:items-center">
       <div className="w-full max-w-md">
         {step === 1 && (
-          <div className="space-y-4 animate-[fadeIn_.25s_cubic-bezier(0.22,1,0.36,1)]">
+          <div className="space-y-3 animate-[fadeIn_.25s_cubic-bezier(0.22,1,0.36,1)]">
             <BridgeSelector
               registry={registry}
               selection={selection}
@@ -94,17 +94,15 @@ export default function Home() {
                 }
               }}
             />
-            <div className="flex justify-end">
-              <button
-                disabled={!canProceed}
-                className={`rounded-md px-4 py-2 text-sm text-white transition ${
-                  canProceed ? "bg-brand-700 hover:bg-brand-800" : "bg-gray-300"
-                }`}
-                onClick={() => setStep(2)}
-              >
-                Next
-              </button>
-            </div>
+            <button
+              disabled={!canProceed}
+              className={`w-full rounded-xl px-4 py-2.5 text-sm text-white transition ${
+                canProceed ? "bg-brand-700 hover:bg-brand-800" : "bg-gray-300"
+              }`}
+              onClick={() => setStep(2)}
+            >
+              Next
+            </button>
           </div>
         )}
 
