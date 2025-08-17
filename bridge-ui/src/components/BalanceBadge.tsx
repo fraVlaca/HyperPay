@@ -1,34 +1,6 @@
-import { UnifiedRegistry, ChainKey, RouteConfig } from "@config/types";
+import { UnifiedRegistry, ChainKey } from "@config/types";
 import { useTokenBalance } from "../hooks/useTokenBalance";
-
-function resolveTokenInfo(registry: UnifiedRegistry, symbol: string, chain: ChainKey) {
-  const token = registry.tokens.find((t) => t.symbol.toLowerCase() === symbol.toLowerCase());
-  const decimals = token?.decimals;
-
-  if (symbol.toLowerCase() === "pyusd" && chain === "optimism") {
-    return { address: "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8", decimals };
-  }
-
-  const oft = registry.routes.find(
-    (r): r is Extract<RouteConfig, { bridgeType: "OFT" }> =>
-      r.bridgeType === "OFT" && r.oft.token.toLowerCase() === symbol.toLowerCase()
-  );
-  if (oft) {
-    const addr = (oft as any)?.oft?.oft?.[chain] as string | undefined;
-    return { address: addr ?? null, decimals };
-  }
-
-  const hwr = registry.routes.find(
-    (r): r is Extract<RouteConfig, { bridgeType: "HWR" }> =>
-      r.bridgeType === "HWR" && r.hwr.token.toLowerCase() === symbol.toLowerCase()
-  );
-  if (hwr) {
-    const addr = (hwr as any)?.hwr?.routers?.[chain] as string | undefined;
-    return { address: addr ?? null, decimals };
-  }
-
-  return { address: null as string | null, decimals };
-}
+import { getDecimals, getTokenAddressForBalance } from "@lib/tokenAddressResolver";
 
 export default function BalanceBadge({
   registry,
@@ -39,7 +11,8 @@ export default function BalanceBadge({
   token: string;
   origin: ChainKey;
 }) {
-  const { address, decimals } = resolveTokenInfo(registry, token, origin);
+  const decimals = getDecimals(registry, token);
+  const address = getTokenAddressForBalance(registry, token, origin);
   const { balance, isConnected } = useTokenBalance({
     tokenAddress: (address as any) || null,
     decimals
