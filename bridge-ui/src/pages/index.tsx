@@ -110,7 +110,6 @@ export default function Home() {
               >
                 ← Back
               </button>
-              <div className="text-xs text-gray-500">{badge.text}</div>
             </div>
 
             {detection?.bridge === "HWR" ? (
