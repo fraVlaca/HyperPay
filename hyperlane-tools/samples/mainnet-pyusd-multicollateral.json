@@ -1,0 +1,32 @@
+{
+  "token": { "symbol": "PYUSD", "decimals": 6 },
+  "collaterals": ["ethereum", "arbitrum"],
+  "synthetic": "optimism",
+  "chains": {
+    "ethereum": {
+      "evmChainId": 1,
+      "hyperlaneDomain": 1,
+      "rpcUrl": "https://eth-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk",
+      "token": "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8",
+      "mailbox": "0xc005dc82818d67AF737725bD4bf75435d065D239"
+    },
+    "arbitrum": {
+      "evmChainId": 42161,
+      "hyperlaneDomain": 42161,
+      "rpcUrl": "https://arb-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk",
+      "token": "0x46850aD61C2B7d64d08c9C754F45254596696984",
+      "mailbox": "0x979Ca5202784112f4738403dBec5D0F3B9daabB9"
+    },
+    "optimism": {
+      "evmChainId": 10,
+      "hyperlaneDomain": 10,
+      "rpcUrl": "https://opt-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk",
+      "token": "0xF22D143c389d5f9Ac231Ae68eF9A556393571469",
+      "mailbox": "0xd4C1905BB1D26BC93DAC913e13CaCC278CdCC80D"
+    }
+  },
+  "owner": "",
+  "deploy": false,
+  "configOut": "./tmp-hwr",
+  "artifactOut": "./artifacts/hwr.pyusd.ethereum-arbitrum-to-optimism.json"
+}

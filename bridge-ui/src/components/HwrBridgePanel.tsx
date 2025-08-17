@@ -1,8 +1,9 @@
 import { ChainKey, UnifiedRegistry } from "@config/types";
 import { Source } from "./MultiSourcePanel";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import TransferTokenForm from "@vendor/hyperlane/features/transfer/TransferTokenForm";
+import HwrTransferForm from "@components/hwr/HwrTransferForm";
 import { Card } from "@vendor/hyperlane/components/layout/Card";
+import MultiSourceToOp from "./hwr/MultiSourceToOp";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -30,7 +31,7 @@ export default function HwrBridgePanel({
 
       <div className="mt-4 flex justify-center">
         <Card className="w-full sm:w-[31rem]">
-          <TransferTokenForm
+          <HwrTransferForm
             registry={registry}
             token={token}
             origin={origin}
@@ -40,6 +41,15 @@ export default function HwrBridgePanel({
           />
         </Card>
       </div>
+
+      {destination === "optimism" && (
+        <div className="mt-4 rounded-md border p-4">
+          <div className="mb-2 text-sm font-medium">
+            Multi-source send (Ethereum + Arbitrum → Optimism)
+          </div>
+          <MultiSourceToOp registry={registry} token={token} destination={destination} />
+        </div>
+      )}
     </div>
   );
 }

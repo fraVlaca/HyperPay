@@ -37,6 +37,9 @@ function main() {
   const routes: any[] = [];
 
   const defaultChains: UnifiedRegistry["chains"] = {
+    ethereum: { evmChainId: 1, lzEid: 30101, hyperlaneDomain: 1 },
+    optimism: { evmChainId: 10, lzEid: 30111, hyperlaneDomain: 10 },
+    arbitrum: { evmChainId: 42161, lzEid: 30110, hyperlaneDomain: 42161 },
     sepolia: { evmChainId: 11155111, lzEid: 40161, hyperlaneDomain: 11155111 },
     arbSepolia: { evmChainId: 421614, lzEid: 40231, hyperlaneDomain: 421614 },
     baseSepolia: { evmChainId: 84532, lzEid: 40245, hyperlaneDomain: 84532 }

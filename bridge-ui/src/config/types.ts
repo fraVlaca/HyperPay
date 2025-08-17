@@ -1,4 +1,4 @@
-export type ChainKey = "ethereum" | "arbitrum" | "base";
+export type ChainKey = "ethereum" | "arbitrum" | "optimism" | "base";
 
 export type ChainConfig = {
   key: ChainKey;
@@ -6,6 +6,8 @@ export type ChainConfig = {
   name: string;
   rpcUrl?: string;
   logoUrl?: string;
+  hyperlaneDomain?: number;
+  lzEid?: number;
 };
 
 export type TokenConfig = {

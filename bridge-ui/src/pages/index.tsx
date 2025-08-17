@@ -20,13 +20,16 @@ export default function Home() {
   useEffect(() => {
     loadRegistry().then(setRegistry);
     const last = readLastSelection();
-    if (last) {
+    if (last && last.origin && last.destination) {
       setSelection({
         token: last.token as any,
         origin: last.origin as ChainKey,
         destination: last.destination as ChainKey,
         amount: last.amount || ""
       });
+    } else {
+      // Ensure we never start with empty origin/destination
+      setSelection((prev) => ({ ...prev, origin: "ethereum", destination: "optimism" }));
     }
   }, []);
 
@@ -36,11 +39,21 @@ export default function Home() {
 
   const detection = useMemo(() => {
     if (!registry) return null;
+    if (typeof window !== "undefined") {
+      try {
+        console.debug("[index] selection =", JSON.stringify(selection));
+      } catch {}
+    }
     const res = detectRoute(registry, {
       token: selection.token,
       origin: selection.origin,
       destination: selection.destination
     });
+    if (typeof window !== "undefined") {
+      try {
+        console.debug("[index] detection =", res);
+      } catch {}
+    }
     return res;
   }, [registry, selection]);
 
@@ -64,7 +77,16 @@ export default function Home() {
       <BridgeSelector
         registry={registry}
         selection={selection}
-        onChange={setSelection}
+        onChange={(next) =>
+          setSelection((prev) => ({
+            token: next.token || prev.token,
+            origin: (next.origin && next.origin.length > 0 ? next.origin : prev.origin) as ChainKey,
+            destination: (next.destination && next.destination.length > 0
+              ? next.destination
+              : prev.destination) as ChainKey,
+            amount: typeof next.amount === "string" ? next.amount : prev.amount
+          }))
+        }
         bridgeBadge={badge}
         canAddSource={detection?.bridge === "HWR" && detection.supportsMultiSource === true}
         onAddSource={() => {

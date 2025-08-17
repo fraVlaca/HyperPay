@@ -4,6 +4,7 @@ export const REGISTRY_SAMPLE: UnifiedRegistry = {
   chains: [
     { key: "ethereum", chainId: 1, name: "Ethereum" },
     { key: "arbitrum", chainId: 42161, name: "Arbitrum" },
+    { key: "optimism", chainId: 10, name: "Optimism" },
     { key: "base", chainId: 8453, name: "Base" }
   ],
   tokens: [
@@ -18,12 +19,14 @@ export const REGISTRY_SAMPLE: UnifiedRegistry = {
         routers: {
           ethereum: "0x0000000000000000000000000000000000000001",
           arbitrum: "0x0000000000000000000000000000000000000002",
+          optimism: "0x0000000000000000000000000000000000000004",
           base: "0x0000000000000000000000000000000000000003"
         },
         edges: [
           { from: "arbitrum", to: "ethereum" },
           { from: "base", to: "ethereum" },
-          { from: "ethereum", to: "arbitrum" }
+          { from: "ethereum", to: "arbitrum" },
+          { from: "ethereum", to: "optimism" }
         ],
         supportsMultiSource: true
       }
@@ -35,11 +38,13 @@ export const REGISTRY_SAMPLE: UnifiedRegistry = {
         oft: {
           ethereum: "0x0000000000000000000000000000000000000011",
           arbitrum: "0x0000000000000000000000000000000000000012",
+          optimism: "0x0000000000000000000000000000000000000014",
           base: "0x0000000000000000000000000000000000000013"
         },
         endpointIds: {
           ethereum: 30101,
           arbitrum: 30110,
+          optimism: 30111,
           base: 30184
         }
       }

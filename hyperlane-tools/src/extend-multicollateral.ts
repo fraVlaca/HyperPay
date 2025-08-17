@@ -37,42 +37,29 @@ function readJson(p: string) {
 }
 
 function buildWarpYaml(input: Input) {
-  const chains = input.collaterals.concat([input.synthetic]);
-  const chainEntries = chains.map((ck) => {
-    const c = input.chains[ck];
-    const isSynthetic = ck === input.synthetic;
-    const token: any = {
-      name: input.token.symbol,
-      symbol: input.token.symbol,
-      decimals: input.token.decimals,
-    };
-    if (!isSynthetic && (c as any)?.token) {
-      token.address = (c as any).token;
-    }
-    return {
-      chainName: ck,
-      domain: c.hyperlaneDomain,
-      type: isSynthetic ? "EvmHypSynthetic" : "EvmHypCollateral",
-      token,
-    };
-  });
+  const chainKeys = input.collaterals.concat([input.synthetic]);
 
-  const connections = input.collaterals.map((ck) => ({
-    from: ck,
-    to: input.synthetic,
-  }));
-
-  const root: any = {
-    token: input.token.symbol,
-    decimals: input.token.decimals,
-    type: "multiCollateral",
-    chains: chainEntries,
-    connections,
-  };
-
-  if (input.owner) {
-    root.owner = input.owner;
-  }
+  const root = Object.fromEntries(
+    chainKeys.map((ck) => {
+      const c: any = input.chains[ck] as any;
+      const isSynthetic = ck === input.synthetic;
+      const entry: any = {
+        type: isSynthetic ? "synthetic" : "collateral",
+      };
+      if (c?.token) {
+        entry.address = c.token;
+        if (!isSynthetic) {
+          entry.token = c.token;
+        }
+      }
+      if (c?.mailbox) {
+        entry.mailbox = c.mailbox;
+      }
+      if (input.token?.symbol) entry.symbol = input.token.symbol;
+      if (typeof input.token?.decimals === "number") entry.decimals = input.token.decimals;
+      return [ck, entry];
+    })
+  );
 
   return YAML.stringify(root);
 }
