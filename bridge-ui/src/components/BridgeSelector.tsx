@@ -1,6 +1,7 @@
 import { ChainConfig, ChainKey, UnifiedRegistry } from "@config/types";
 import Badge from "./Badge";
 import DirectionSwap from "./DirectionSwap";
+import BalanceBadge from "./BalanceBadge";
 
 type Selection = {
   token: string;
@@ -82,12 +83,15 @@ export default function BridgeSelector({
       <div className="grid grid-cols-1 md:grid-cols-3">
         <div>
           <label className="text-sm text-gray-600">Amount</label>
-          <input
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-600"
-            placeholder="0.0"
-            value={selection.amount}
-            onChange={(e) => update({ amount: e.target.value })}
-          />
+          <div className="mt-1 flex items-center gap-2">
+            <input
+              className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-600"
+              placeholder="0.0"
+              value={selection.amount}
+              onChange={(e) => update({ amount: e.target.value })}
+            />
+            <BalanceBadge registry={registry} token={pyusdSymbol} origin={selection.origin} />
+          </div>
         </div>
       </div>
 
