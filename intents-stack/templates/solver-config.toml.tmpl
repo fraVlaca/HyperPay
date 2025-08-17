@@ -1,0 +1,77 @@
+[solver]
+id = "oif-solver"
+
+% for chain_id, net in networks.items():
+[networks.${chain_id}]
+rpc_url = "${net["rpc_url"]}"
+input_settler_address = "${net["input_settler_address"]}"
+output_settler_address = "${net["output_settler_address"]}"
+% for t in net.get("tokens", []):
+[[networks.${chain_id}.tokens]]
+address = "${t["address"]}"
+symbol = "${t["symbol"]}"
+decimals = ${t["decimals"]}
+% end
+% end
+
+[storage]
+primary = "${storage["primary"]}"
+cleanup_interval_seconds = ${storage["cleanup_interval_seconds"]}
+[storage.implementations.file]
+storage_path = "${storage["file"]["storage_path"]}"
+ttl_orders = ${storage["file"]["ttl_orders"]}
+ttl_intents = ${storage["file"]["ttl_intents"]}
+ttl_order_by_tx_hash = ${storage["file"]["ttl_order_by_tx_hash"]}
+[storage.implementations.memory]
+
+[account]
+provider = "local"
+[account.config]
+private_key = "${account["private_key"]}"
+
+[delivery]
+min_confirmations = ${delivery["min_confirmations"]}
+% for name, prov in delivery["providers"].items():
+[delivery.providers.${name}]
+network_id = ${prov["network_id"]}
+% if prov.get("private_key"):
+private_key = "${prov["private_key"]}"
+% end
+% end
+
+% if discovery.get("enabled"):
+[discovery]
+% if discovery.get("onchain_eip7683"):
+[discovery.sources.onchain_eip7683]
+network_id = ${discovery["onchain_eip7683"]["network_id"]}
+% end
+% if discovery.get("offchain_eip7683", {}).get("enabled"):
+[discovery.sources.offchain_eip7683]
+api_host = "${discovery["offchain_eip7683"]["api_host"]}"
+api_port = ${discovery["offchain_eip7683"]["api_port"]}
+network_ids = [${", ".join(map(str, discovery["offchain_eip7683"]["network_ids"]))}]
+% end
+% end
+
+[order]
+[order.implementations.eip7683]
+[order.execution_strategy]
+strategy_type = "${order["execution_strategy"]["strategy_type"]}"
+[order.execution_strategy.config]
+max_gas_price_gwei = ${order["execution_strategy"]["config"]["max_gas_price_gwei"]}
+
+[settlement]
+[settlement.domain]
+chain_id = ${settlement["domain"]["chain_id"]}
+address = "${settlement["domain"]["address"]}"
+[settlement.implementations.eip7683]
+network_ids = [${", ".join(map(str, settlement["eip7683"]["network_ids"]))}]
+oracle_addresses = { % for k, v in settlement["eip7683"]["oracle_addresses"].items(): ${k} = "${v}", % end }
+dispute_period_seconds = ${settlement["dispute_period_seconds"]}
+
+[api]
+enabled = ${"true" if api["enabled"] else "false"}
+host = "${api["host"]}"
+port = ${api["port"]}
+timeout_seconds = ${api["timeout_seconds"]}
+max_request_size = ${api["max_request_size"]}

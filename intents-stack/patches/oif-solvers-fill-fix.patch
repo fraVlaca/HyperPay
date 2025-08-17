@@ -1,0 +1,77 @@
+--- a/crates/solver-order/src/implementations/standards/_7683.rs
++++ b/crates/solver-order/src/implementations/standards/_7683.rs
+@@ -375,26 +375,52 @@ impl OrderInterface for Eip7683OrderImpl {
+ 			.output_settler_address
+ 			.clone();
+ 
+-		// Create the MandateOutput struct for the fill operation
+-		let mandate_output = MandateOutput {
+-			oracle: FixedBytes::<32>::from([0u8; 32]), // No oracle for direct fills
+-			settler: {
+-				let mut bytes32 = [0u8; 32];
+-				bytes32[12..32].copy_from_slice(&output_settler_address.0);
+-				FixedBytes::<32>::from(bytes32)
+-			},
+-			chainId: output.chain_id,
+-			token: FixedBytes::<32>::from(output.token),
+-			amount: output.amount,
+-			recipient: FixedBytes::<32>::from(output.recipient),
+-			call: vec![].into(),    // Empty for direct transfers
+-			context: vec![].into(), // Empty context
+-		};
++		// Encode originData according to OutputFillLib format:
++		// FILL_DEADLINE  0     (6 bytes)  - uint48
++		// ORACLE         6     (32 bytes) - bytes32
++		// SETTLER        38    (32 bytes) - bytes32
++		// CHAIN_ID       70    (32 bytes) - uint256
++		// TOKEN          102   (32 bytes) - bytes32
++		// AMOUNT         134   (32 bytes) - uint256
++		// RECIPIENT      166   (32 bytes) - bytes32
++		// CALL_LENGTH    198   (2 bytes)  - uint16
++		// CALL           200   (variable)
++		// CONTEXT_LENGTH 200+N (2 bytes)  - uint16
++		// CONTEXT        202+N (variable)
++		
++		let mut origin_data = Vec::new();
++		
++		// Fill deadline (6 bytes)
++		let deadline_bytes = order_data.fill_deadline.to_be_bytes();
++		origin_data.extend_from_slice(&deadline_bytes[4..]); // Take last 6 bytes of u32
++		origin_data.extend_from_slice(&[0u8; 2]); // Pad to align to 6 bytes
++		
++		// Oracle (32 bytes)
++		origin_data.extend_from_slice(&output.oracle);
++		
++		// Settler (32 bytes)
++		let mut settler_bytes32 = [0u8; 32];
++		settler_bytes32[12..32].copy_from_slice(&output_settler_address.0);
++		origin_data.extend_from_slice(&settler_bytes32);
++		
++		// Chain ID (32 bytes)
++		let chain_id_bytes = output.chain_id.to_be_bytes::<32>();
++		origin_data.extend_from_slice(&chain_id_bytes);
++		
++		// Token (32 bytes)
++		origin_data.extend_from_slice(&output.token);
++		
++		// Amount (32 bytes)
++		let amount_bytes = output.amount.to_be_bytes::<32>();
++		origin_data.extend_from_slice(&amount_bytes);
++		
++		// Recipient (32 bytes)
++		origin_data.extend_from_slice(&output.recipient);
++		
++		// Call length (2 bytes) and call data
++		origin_data.extend_from_slice(&[0u8; 2]); // Empty call
++		
++		// Context length (2 bytes) and context data
++		origin_data.extend_from_slice(&[0u8; 2]); // Empty context
+ 
+ 		// Encode fill data
+ 		let fill_data = IDestinationSettler::fillCall {
+ 			orderId: FixedBytes::<32>::from(order_data.order_id),
+-			originData: mandate_output.abi_encode().into(),
++			originData: origin_data.into(),
+ 			fillerData: {
+ 				// FillerData should contain the solver address as bytes32
+ 				let mut solver_bytes32 = [0u8; 32];
