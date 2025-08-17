@@ -72,7 +72,11 @@ def seed_route_liquidity(plan, warp_route):
         plan: Kurtosis plan object
         warp_route: Warp route configuration
     """
-    initial_liquidity = safe_get(warp_route, "initialLiquidity", [])
+    # NOTE: The parser stores this field as 'initial_liquidity' (snake_case).
+    # For robustness, support both the snake_case and camelCase keys.
+    initial_liquidity = safe_get(warp_route, "initial_liquidity", [])
+    if len(initial_liquidity) == 0:
+        initial_liquidity = safe_get(warp_route, "initialLiquidity", [])
     
     if len(initial_liquidity) == 0:
         return
