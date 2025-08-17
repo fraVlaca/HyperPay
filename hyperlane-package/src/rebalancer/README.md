@@ -1,32 +1,33 @@
 Rebalancer (Docker)
 
-- Uses Hyperlane monorepo CLI rebalancer.
+- Uses the Hyperlane monorepo CLI rebalancer.
 - OFT and CCTP supported via config.
+- Runs from the user's forked image fravlaca/hyperlane-monorepo:1.0.0.
 
-Build
-docker build -t hyperlane-rebalancer:oft ./hyperlane-package/src/rebalancer
-
-Run
-# Non-interactive: provide a private key via env (single key across chains)
+Run (monitor-only)
+# Provide a single private key via env for all chains
 docker run --rm \
   -e HYP_KEY=0xYOUR_PRIVATE_KEY \
   -v $(pwd)/config:/config \
-  hyperlane-rebalancer:oft \
+  fravlaca/hyperlane-monorepo:1.0.0 \
+  warp rebalancer \
   --config /config/rebalancer.oft.json \
   --monitorOnly
 
-# Or using an args-file (Kurtosis-style)
+Args-file variant (Kurtosis-style)
 docker run --rm \
   -e HYP_KEY=0xYOUR_PRIVATE_KEY \
   -v $(pwd)/config:/config \
-  hyperlane-rebalancer:oft \
+  fravlaca/hyperlane-monorepo:1.0.0 \
+  warp rebalancer \
   --args-file /config/oft.args.example.yaml \
   --monitorOnly
 
 Notes
-- You must pass either --config or --args-file; otherwise the CLI will error with "Missing required argument: config".
+- Pass either --config or --args-file; otherwise the CLI will error with "Missing required argument: config".
 - The config must include a valid warpRouteId and per-chain bridge addresses (TokenBridgeOft).
 - Example config included: ./rebalancer.oft.example.json (copy to your mounted /config path and edit).
+- Optional visibility block: you can add an "oft.domains" section documenting LayerZero EIDs/endpoints to match on-chain addDomain mappings.
 
 Config
 See hyperlane-monorepo/typescript/cli/examples/rebalancer.oft.example.json or the provided rebalancer.oft.example.json and set per-chain bridge addresses to TokenBridgeOft to enable OFT.

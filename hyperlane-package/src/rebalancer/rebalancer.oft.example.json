@@ -32,5 +32,17 @@
         }
       }
     }
+  },
+  "oft": {
+    "domains": {
+      "sepolia": {
+        "lzEid": 10161,
+        "endpoint": "0xEndpointIfTracked"
+      },
+      "arbitrumsepolia": {
+        "lzEid": 10143,
+        "endpoint": "0xEndpointIfTracked"
+      }
+    }
   }
 }
