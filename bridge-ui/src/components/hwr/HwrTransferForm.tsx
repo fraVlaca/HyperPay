@@ -1,3 +1,5 @@
+
+
 import { useEffect, useMemo, useState } from "react";
 import { ChainLogo } from "@hyperlane-xyz/widgets";
 import { ChainKey, UnifiedRegistry } from "@config/types";
@@ -8,7 +10,8 @@ import { toast } from "react-toastify";
 import { sendHwr } from "@lib/hwrSend";
 import { getDevWalletClient } from "@lib/wallet";
 import Collapsible from "@components/ui/Collapsible";
-import { buildCrossChainOrder, toUnits, sendFastIntent } from "@lib/fastIntent";
+import { toUnits, sendFastIntent, getOutputSettlerAddress } from "@lib/fastIntent";
+const CHAIN_IDS: Record<string, number> = { ethereum: 1, arbitrum: 42161, optimism: 10, base: 8453 };
 
 type Props = {
   registry: UnifiedRegistry;
@@ -58,8 +61,7 @@ export default function HwrTransferForm({
   }, [amount, token, registry]);
 
   useEffect(() => {
-    const envKey = `NEXT_PUBLIC_OUTPUT_SETTLER_${destination.toUpperCase()}`;
-    const val = (typeof process !== "undefined" ? (process as any).env?.[envKey] : undefined) as string | undefined;
+    const val = getOutputSettlerAddress(destination);
     if (val) setSettlementAddress(val);
   }, [destination]);
 
@@ -102,6 +104,11 @@ export default function HwrTransferForm({
         }
         client = devClient as any;
         from = (devClient.account?.address as `0x${string}`) as any;
+      }
+      const expectedChainId = CHAIN_IDS[origin];
+      if (expectedChainId && client?.chain && client.chain.id !== expectedChainId) {
+        toast.error(`Switch wallet to ${origin} to send`);
+        return;
       }
       const decimals = registry.tokens.find((t) => t.symbol === token)?.decimals ?? 6;
       const { inputToken, outputToken } = resolveHwrTokens();
