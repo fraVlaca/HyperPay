@@ -1,3 +1,16 @@
+@keyframes skate {
+  0% { transform: translateX(-10%); }
+  50% { transform: translateX(90%); }
+  100% { transform: translateX(-10%); }
+}
+.animate-skate {
+  animation: skate 18s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-skate { animation: none; transform: translateX(0); }
+}
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
