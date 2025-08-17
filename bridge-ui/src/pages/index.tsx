@@ -47,11 +47,6 @@ export default function Home() {
     });
     return res;
   }, [registry, selection]);
-  useEffect(() => {
-    if (step === 2 && detection?.bridge === "HWR" && extraSources.length === 0) {
-      setExtraSources([{ chain: selection.origin, amount: selection.amount || "" }]);
-    }
-  }, [step, detection?.bridge]);
 
 
   if (!registry) {
@@ -100,7 +95,10 @@ export default function Home() {
               className={`w-full rounded-xl px-4 py-2.5 text-sm text-white transition ${
                 canProceed ? "bg-brand-700 hover:bg-brand-800" : "bg-gray-300"
               }`}
-              onClick={() => setStep(2)}
+              onClick={() => {
+                setExtraSources([{ chain: selection.origin, amount: selection.amount || "" }]);
+                setStep(2);
+              }}
             >
               Next
             </button>
