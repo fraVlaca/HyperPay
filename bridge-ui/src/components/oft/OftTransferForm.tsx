@@ -33,6 +33,7 @@ export default function OftTransferForm({
   const { data: walletClient } = useWalletClient();
   const [busy, setBusy] = useState(false);
 
+  const [note, setNote] = useState<string>("");
   const [settlementAddress, setSettlementAddress] = useState<string>("");
   const [destinationAddress, setDestinationAddress] = useState<string>("");
   const [minOut, setMinOut] = useState<string>("");
@@ -143,16 +144,26 @@ export default function OftTransferForm({
           <div>Route: {origin} -&gt; {destination}</div>
           <div>Amount: {amount || "0"}</div>
         </div>
+        <div className="mt-3 space-y-2">
+          <label className="text-xs text-gray-500">Note (optional)</label>
+          <input
+            className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-900/10"
+            placeholder="Add a note for your records"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
       </Collapsible>
 
-      <button
-        disabled={busy}
-        className={clsx(
-          "w-full rounded-xl px-4 py-2.5 text-sm text-white",
-          busy ? "bg-gray-700" : "bg-gray-900",
-          busy && "opacity-50"
-        )}
-        onClick={async () => {
+      <div className="flex items-center justify-between">
+        <button
+          disabled={busy}
+          className={clsx(
+            "rounded-xl px-4 py-2.5 text-sm text-white",
+            busy ? "bg-gray-700" : "bg-gray-900",
+            busy && "opacity-50"
+          )}
+          onClick={async () => {
           try {
             setBusy(true);
             let client = walletClient;
@@ -189,10 +200,15 @@ export default function OftTransferForm({
           } finally {
             setBusy(false);
           }
-        }}
-      >
-        Submit normal transfer
-      </button>
+          }}
+        >
+          Submit normal transfer
+        </button>
+        <div className="flex items-center gap-1 text-[11px] text-gray-600">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-80"><path d="M12 8v5l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2"/></svg>
+          <span>3m</span>
+        </div>
+      </div>
 
       <Collapsible title="Fast transfer parameters" subtitle="Configure solver intent" defaultOpen={false}>
         <div className="space-y-3">
@@ -251,12 +267,18 @@ export default function OftTransferForm({
         </div>
       </Collapsible>
 
-      <button
-        className="w-full rounded-xl bg-brand-700 hover:bg-brand-800 px-4 py-2.5 text-sm text-white"
-        onClick={handleFastSubmit}
-      >
-        Submit Fast Transfer
-      </button>
+      <div className="flex items-center justify-between">
+        <button
+          className="rounded-xl bg-brand-700 hover:bg-brand-800 px-4 py-2.5 text-sm text-white"
+          onClick={handleFastSubmit}
+        >
+          Submit Fast Transfer
+        </button>
+        <div className="flex items-center gap-1 text-[11px] text-gray-600">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-80"><path d="M12 8v5l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2"/></svg>
+          <span>20s</span>
+        </div>
+      </div>
     </div>
   );
 }
