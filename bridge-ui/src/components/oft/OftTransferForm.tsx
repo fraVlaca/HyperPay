@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { sendOft } from "@lib/oftSend";
 import { getDevWalletClient } from "@lib/wallet";
 import Collapsible from "@components/ui/Collapsible";
-import { buildCrossChainOrder, toUnits, sendFastIntent } from "@lib/fastIntent";
+import { toUnits, sendFastIntent, getOutputSettlerAddress } from "@lib/fastIntent";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -19,6 +19,7 @@ type Props = {
 const CHAIN_IDS: Record<string, number> = {
   ethereum: 1,
   arbitrum: 42161,
+  optimism: 10,
   base: 8453
 };
 
@@ -60,8 +61,7 @@ export default function OftTransferForm({
   }, [amount, token, registry]);
 
   useEffect(() => {
-    const envKey = `NEXT_PUBLIC_OUTPUT_SETTLER_${destination.toUpperCase()}`;
-    const val = (typeof process !== "undefined" ? (process as any).env?.[envKey] : undefined) as string | undefined;
+    const val = getOutputSettlerAddress(destination);
     if (val) setSettlementAddress(val);
   }, [destination]);
 
@@ -109,10 +109,9 @@ export default function OftTransferForm({
       const inputAmount = toUnits(amount || "0", decimals);
       const minOutputAmount = toUnits(minOut || "0", decimals);
       const destAddr = (destinationAddress || from) as `0x${string}`;
-
       const now = Math.floor(Date.now() / 1000);
       const absFill = now + (fillDeadline || 7200);
-
+ 
       const { hash } = await sendFastIntent({
         origin,
         destination,
@@ -125,7 +124,7 @@ export default function OftTransferForm({
         outputRecipient: destAddr,
         fillDeadline: absFill
       });
-
+ 
       toast.success(`Intent submitted: ${hash.slice(0, 10)}…`);
     } catch (e: any) {
       console.error(e);
