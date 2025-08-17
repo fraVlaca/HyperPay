@@ -55,3 +55,51 @@ Notes
 
 Config
 See hyperlane-monorepo/typescript/cli/examples/rebalancer.oft.example.json or the provided rebalancer.oft.example.json and set per-chain bridge addresses to TokenBridgeOft to enable OFT.
+
+One-command setup for any existing OFT pair
+
+Use the deploy_oft_warp.sh helper to deploy/attach a Hyperlane Warp Route (HWR 2.0) over your existing OFTs, wire LayerZero EID mappings, grant rebalancer/bridge permissions, write local registry artifacts, and run the stock CLI rebalancer (monitor-only, then live).
+
+Prereqs
+- env: HYP_KEY, SEPOLIA_RPC, ARBSEPOLIA_RPC
+- tools: hyperlane CLI, jq, foundry cast, node
+- your OFT token addresses on each chain and the LayerZero EIDs
+
+Example
+HYP_KEY=0xYOUR_PK \
+SEPOLIA_RPC=https://sepolia.gateway.tenderly.co \
+ARBSEPOLIA_RPC=https://api.zan.top/arb-sepolia \
+SYMBOL=MOFT \
+OWNER=0xYourOwnerEOA \
+REBALANCER=0xYourRebalancerEOA \
+OFT_SEPOLIA=0xYourOFTonSepolia \
+OFT_ARBSEPOLIA=0xYourOFTonArbSep \
+LZ_EID_SEPOLIA=40161 \
+LZ_EID_ARBSEPOLIA=40231 \
+./deploy_oft_warp.sh
+
+What it does
+- Writes warp-route.yaml with bridge: oft and your OFT addresses
+- hyperlane warp deploy to deploy/attach the Warp Route and write artifacts to ~/.hyperlane
+- Reads warp-read.json to resolve warpRouteId and router addresses
+- addDomain on both routers with the proper Hyperlane domain → LZ EID mapping
+- Enrolls peers and allowlists: addRebalancer, addBridge, setRecipient
+- Snapshots pre-balances
+- Writes a rebalancer YAML config and runs monitor-only then live
+- Snapshots post-balances to confirm movement
+
+Templates
+- warp-route.oft.template.yaml
+- rebalancer.oft.template.yaml
+
+Docker parity
+Mount ~/.hyperlane and your /config to run the same config under the image:
+docker run --rm -e HYP_KEY=0xYOUR_PK \
+  -v ~/.hyperlane:/root/.hyperlane \
+  -v $(pwd):/config \
+  fravlaca/hyperlane-monorepo:1.0.0 \
+  warp rebalancer \
+  --config /config/rebalancer.oft.template.yaml \
+  --monitorOnly \
+  --registry /root/.hyperlane \
+  --registry https://github.com/hyperlane-xyz/hyperlane-registry

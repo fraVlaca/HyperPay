@@ -1,5 +1,10 @@
 OFT rebalancer quickstart
 
+Update or deploy a warp route
+- hyperlane warp deploy --config /path/to/warp-deploy.yaml
+- hyperlane warp read --symbol &lt;SYMBOL&gt; --json &gt; /tmp/warp.json
+- jq -r '.warpRouteId // .routeId // empty' /tmp/warp.json
+
 Run via Docker
 docker run --rm \
   -e HYP_KEY=&lt;PK&gt; \
@@ -15,10 +20,9 @@ docker run --rm \
 Notes
 - The rebalancer reads balances held by the route’s router contracts; fresh deployments may show zero until you fund the routers with the OFT.
 - Ensure on-chain LayerZero EID mappings are set via TokenBridgeOft.addDomain and router enrollments are configured both ways on the warp route.
-# HyperPay
+ # HyperPay
 
-## Hyperlane tools (HWR 2.0 + OFT deploy helpers)
-
+ ## Hyperlane tools (HWR 2.0 + OFT deploy helpers)
 A minimal TS toolkit to:
 - Generate HWR 2.0 multi-collateral warp-route-deployment.yaml and optionally deploy/read via Hyperlane CLI.
 - Emit artifacts for OFT Native ETH adapters (Sepolia ↔ Arbitrum Sepolia) and HWR routes, then build a merged registry JSON for the UI.

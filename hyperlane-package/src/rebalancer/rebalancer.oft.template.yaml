@@ -1,0 +1,24 @@
+route_id: "MOFT/sepolia-arbitrumsepolia"
+monitor_only: true
+adapters:
+  - type: oft
+    params:
+      eids:
+        sepolia: 40161
+        arbitrum-sepolia: 40231
+      peers:
+        sepolia:          "0x<OFT_SEPOLIA>"
+        arbitrum-sepolia: "0x<OFT_ARBSEPOLIA>"
+strategy:
+  rebalanceStrategy: weighted
+  chains:
+    sepolia:
+      bridge: "0x<SEPOLIA_ROUTER>"
+      bridgeLockTime: 20
+      bridgeMinAcceptedAmount: "1"
+      weighted: { weight: 10, tolerance: 5 }
+    arbitrumsepolia:
+      bridge: "0x<ARBSEPOLIA_ROUTER>"
+      bridgeLockTime: 20
+      bridgeMinAcceptedAmount: "1"
+      weighted: { weight: 100, tolerance: 10 }
