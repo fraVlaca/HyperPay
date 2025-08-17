@@ -107,8 +107,13 @@ export default function MultiSourcePanel({
                   onChange={(e) => update(i, { amount: e.target.value })}
                 />
                 <button
-                  onClick={() => remove(i)}
-                  className="w-[96px] rounded-xl border px-4 py-2.5 text-sm hover:bg-brand-50"
+                  onClick={() => {
+                    if (sources.length > 1) remove(i);
+                  }}
+                  disabled={sources.length === 1}
+                  className={`w-[96px] rounded-xl border px-4 py-2.5 text-sm ${
+                    sources.length === 1 ? "cursor-not-allowed opacity-50" : "hover:bg-brand-50"
+                  }`}
                 >
                   Remove
                 </button>
