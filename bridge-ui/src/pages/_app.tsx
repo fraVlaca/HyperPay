@@ -25,17 +25,22 @@ const wagmiConfig = getDefaultConfig({
 const queryClient = new QueryClient();
 
 import Header from "@components/Header";
+import dynamic from "next/dynamic";
+import { SkateboardProvider } from "@lib/skateboard";
+
+const SkateboardAnimation = dynamic(() => import("@components/SkateboardAnimation"), { ssr: false });
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <>
+          <SkateboardProvider>
             <Header />
             <Component {...pageProps} />
             <ToastContainer position="top-right" />
-          </>
+            <SkateboardAnimation />
+          </SkateboardProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

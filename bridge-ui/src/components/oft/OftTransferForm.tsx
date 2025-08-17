@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { toast } from "react-toastify";
 import { sendOft } from "@lib/oftSend";
 import { getDevWalletClient } from "@lib/wallet";
+import { useSkateboard } from "@lib/skateboard";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -31,6 +32,7 @@ export default function OftTransferForm({
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [busy, setBusy] = useState(false);
+  const { show, hide } = useSkateboard();
 
   const cfg = useMemo(() => {
     const route = registry.routes.find(
@@ -61,6 +63,7 @@ export default function OftTransferForm({
         onClick={async () => {
           try {
             setBusy(true);
+            show();
             let client = walletClient;
             let fromAddr = address;
             if (!client || !fromAddr) {
@@ -68,6 +71,7 @@ export default function OftTransferForm({
               if (!devClient) {
                 toast.error("Connect a wallet first");
                 setBusy(false);
+                hide();
                 return;
               }
               // @ts-ignore
@@ -79,6 +83,7 @@ export default function OftTransferForm({
             if (expectedChainId && (client as any)?.chain && (client as any).chain.id !== expectedChainId) {
               toast.error(`Switch wallet to ${origin} to send`);
               setBusy(false);
+              hide();
               return;
             }
             const { hash } = await sendOft({

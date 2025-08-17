@@ -33,41 +33,52 @@ export default function MultiSourcePanel({
   }
 
   return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium">Additional sources</h3>
-      <div className="space-y-2">
-        {sources.map((s, i) => (
-          <div key={i} className="grid grid-cols-1 gap-2 md:grid-cols-3">
-            <select
-              className="rounded-md border border-gray-300 px-3 py-2"
-              value={s.chain}
-              onChange={(e) => update(i, { chain: e.target.value as ChainKey })}
-            >
-              {registry.chains.map((c) => (
-                <option key={c.key} value={c.key}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <input
-              className="rounded-md border border-gray-300 px-3 py-2"
-              placeholder="Amount"
-              value={s.amount}
-              onChange={(e) => update(i, { amount: e.target.value })}
-            />
-            <button
-              onClick={() => remove(i)}
-              className="rounded-md border border-gray-300 px-3 py-2"
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="pt-1">
-        <button onClick={add} className="rounded-md bg-gray-100 px-3 py-2 text-sm">
-          Add source
-        </button>
+    <div className="space-y-3">
+      <h3 className="text-sm font-medium">Multi-source send (Ethereum + Arbitrum → {destination})</h3>
+
+      <div className="rounded-md border p-3">
+        <div className="text-xs text-gray-600">Send from multiple sources to {destination}</div>
+
+        <div className="mt-3 space-y-2">
+          {sources.map((s, i) => (
+            <div key={i} className="rounded-md border bg-white p-2 shadow-sm transition-all">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_1fr_auto]">
+                <select
+                  className="rounded-md border border-gray-300 px-3 py-2"
+                  value={s.chain}
+                  onChange={(e) => update(i, { chain: e.target.value as ChainKey })}
+                >
+                  {registry.chains.map((c) => (
+                    <option key={c.key} value={c.key}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className="rounded-md border border-gray-300 px-3 py-2"
+                  placeholder="0.00"
+                  value={s.amount}
+                  onChange={(e) => update(i, { amount: e.target.value })}
+                />
+                <button
+                  onClick={() => remove(i)}
+                  className="rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-2">
+          <button
+            onClick={add}
+            className="rounded-md bg-brand-50 px-3 py-2 text-sm text-brand-800 hover:bg-brand-100"
+          >
+            Add source
+          </button>
+        </div>
       </div>
     </div>
   );

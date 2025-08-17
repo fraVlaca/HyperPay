@@ -7,6 +7,7 @@ import { useAccount, useWalletClient } from "wagmi";
 import { toast } from "react-toastify";
 import { sendHwr } from "@lib/hwrSend";
 import { getDevWalletClient } from "@lib/wallet";
+import { useSkateboard } from "@lib/skateboard";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -29,6 +30,7 @@ export default function HwrTransferForm({
   const [busy, setBusy] = useState(false);
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const { show, hide } = useSkateboard();
 
   const edgesOk = useMemo(() => {
     const primaryOk = isEdgeAvailable(registry, token, origin, destination);
@@ -111,6 +113,7 @@ export default function HwrTransferForm({
           }
           try {
             setBusy(true);
+            show();
             const tx = await sendHwr({
               registry,
               token,
@@ -125,6 +128,7 @@ export default function HwrTransferForm({
             console.error(e);
             toast.error(e?.message || "HWR transfer failed");
           } finally {
+            hide();
             setBusy(false);
           }
         }}
