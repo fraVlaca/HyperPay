@@ -13,9 +13,33 @@ Driven by a composable intent engine over Hyperlane Warp Routes 2.0 + LayerZero 
 - **Modular Architecture**: Built on composable packages that can be mixed and matched for specific needs without vendor lock-in
 - **ERC-7683 Compliance**: Follows the Open Intents Framework standard for cross-chain intent execution and settlement
 
-## Architecture Overview
+## System Architecture
 
-HyperPay is composed of three main modular packages that work together to provide a complete intent-driven bridging solution:
+![HyperPay Architecture](hyperpay-architecture.png)
+
+HyperPay creates a unified bridging experience by combining Hyperlane Warp Routes 2.0 and LayerZero OFT technologies:
+
+### Core Architecture Components
+
+- **L Vault (Liquidity Vault)**: Central liquidity management on Optimism
+- **Hyperlane Lock & Mint**: Connects Ethereum and Arbitrum to Optimism via collateral locking and synthetic minting
+- **LayerZero Mint & Burn**: Direct ETH ↔ ARB transfers using OFT (Omnichain Fungible Token) standard
+- **Custody Vaults**: Secure token storage on Ethereum and Arbitrum
+- **OFT Adapters**: LayerZero integration points for cross-chain transfers
+- **Rebalancer**: Automated liquidity management across custody vaults
+- **Intent Fulfill**: Solver-driven intent execution for fast transfers
+
+### Unified Bridging Flow
+
+1. **Intent Declaration**: Users declare desired outcomes (amount, destination, recipient)
+2. **Route Detection**: System automatically selects optimal path (Hyperlane vs LayerZero)
+3. **Solver Fulfillment**: Decentralized solvers compete to fulfill intents optimally
+4. **Cross-Chain Settlement**: Hyperlane oracles verify and settle transactions
+5. **Token Delivery**: Recipients receive tokens on destination chain in seconds
+
+## Technical Architecture Overview
+
+The system is built from four main modular packages that work together to provide the complete intent-driven bridging solution:
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
