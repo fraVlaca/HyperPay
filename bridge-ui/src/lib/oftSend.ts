@@ -8,15 +8,78 @@ const CHAIN_TO_VIEM: Record<string, any> = {
 };
 
 export const OFT_ABI = [
-  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
-  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
-  { type: "function", name: "allowance", stateMutability: "view", inputs: [{ type: "address" }, { type: "address" }], outputs: [{ type: "uint256" }] },
-  { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }] },
-
-  { type: "function", name: "quoteSend", stateMutability: "view", inputs: [{ type: "uint32" }, { type: "bytes32" }, { type: "uint256" }, { type: "bytes" }], outputs: [{ name: "nativeFee", type: "uint256" }, { name: "lzTokenFee", type: "uint256" }] },
-  { type: "function", name: "send", stateMutability: "payable", inputs: [{ type: "uint32" }, { type: "bytes32" }, { type: "uint256" }, { type: "bytes" }, { type: "bytes" }], outputs: [] },
-
-  { type: "function", name: "sendFrom", stateMutability: "payable", inputs: [{ type: "address" }, { type: "uint16" }, { type: "bytes" }, { type: "uint256" }, { type: "address" }, { type: "address" }, { type: "bytes" }], outputs: [] }
+  {
+    type: "function",
+    name: "quoteSend",
+    stateMutability: "view",
+    inputs: [
+      {
+        type: "tuple",
+        name: "sendParam",
+        components: [
+          { name: "dstEid", type: "uint32" },
+          { name: "to", type: "bytes32" },
+          { name: "amountLD", type: "uint256" },
+          { name: "minAmountLD", type: "uint256" },
+          { name: "extraOptions", type: "bytes" },
+          { name: "composeMsg", type: "bytes" },
+          { name: "oftCmd", type: "bytes" }
+        ]
+      },
+      { name: "payInLzToken", type: "bool" }
+    ],
+    outputs: [
+      {
+        name: "fee",
+        type: "tuple",
+        components: [
+          { name: "nativeFee", type: "uint256" },
+          { name: "lzTokenFee", type: "uint256" }
+        ]
+      }
+    ]
+  },
+  {
+    type: "function",
+    name: "send",
+    stateMutability: "payable",
+    inputs: [
+      {
+        type: "tuple",
+        name: "sendParam",
+        components: [
+          { name: "dstEid", type: "uint32" },
+          { name: "to", type: "bytes32" },
+          { name: "amountLD", type: "uint256" },
+          { name: "minAmountLD", type: "uint256" },
+          { name: "extraOptions", type: "bytes" },
+          { name: "composeMsg", type: "bytes" },
+          { name: "oftCmd", type: "bytes" }
+        ]
+      },
+      {
+        type: "tuple",
+        name: "fee",
+        components: [
+          { name: "nativeFee", type: "uint256" },
+          { name: "lzTokenFee", type: "uint256" }
+        ]
+      },
+      { name: "refundAddress", type: "address" }
+    ],
+    outputs: [
+      {
+        name: "receipt",
+        type: "tuple",
+        components: [
+          { name: "guid", type: "bytes32" },
+          { name: "nonce", type: "uint64" },
+          { name: "fee", type: "uint256" },
+          { name: "valueSent", type: "uint256" }
+        ]
+      }
+    ]
+  }
 ] as const;
 
 function resolveOft(reg: UnifiedRegistry, token: string, origin: ChainKey, destination: ChainKey) {
@@ -58,27 +121,37 @@ export async function sendOft(params: {
 
   const { Options } = await import("@layerzerolabs/lz-v2-utilities");
   const toHexBytes = (b: any) => (typeof b === "string" && b.startsWith("0x")) ? b : ("0x" + Buffer.from(b as Uint8Array).toString("hex"));
-  const lzOptions = toHexBytes(Options.newOptions().addExecutorLzReceiveOption(300_000, 0).toBytes());
+  const lzOptions = toHexBytes(Options.newOptions().addExecutorLzReceiveOption(300_000, 0).toBytes()) as `0x${string}`;
 
-  let out: readonly [bigint, bigint];
+  const sendParam = {
+    dstEid: Number(toEid),
+    to: recipientBytes32,
+    amountLD: amountWei,
+    minAmountLD: amountWei,
+    extraOptions: lzOptions,
+    composeMsg: "0x",
+    oftCmd: "0x"
+  } as const;
+
+  let fee: { nativeFee: bigint; lzTokenFee: bigint };
   try {
-    out = await publicClient.readContract({
+    fee = await publicClient.readContract({
       address: tokenAddr,
       abi: OFT_ABI,
       functionName: "quoteSend",
-      args: [Number(toEid), recipientBytes32, amountWei, lzOptions]
+      args: [sendParam, false]
     }) as any;
   } catch (e: any) {
     throw new Error(e?.shortMessage || e?.message || "quoteSend reverted; verify OFT adapter address and peers");
   }
-  const nativeFee = (out?.[0] || 0n) as bigint;
+  const nativeFee = (fee?.nativeFee || 0n) as bigint;
 
-  const hash: `0x${string}` = await walletClient.writeContract({
+  const receipt: { guid: `0x${string}` } = await walletClient.writeContract({
     address: tokenAddr,
     abi: OFT_ABI,
     functionName: "send",
-    args: [Number(toEid), recipientBytes32, amountWei, lzOptions, "0x"],
+    args: [sendParam, { nativeFee, lzTokenFee: 0n }, sender],
     value: nativeFee > 0n ? nativeFee : undefined
   });
-  return { hash, fee: nativeFee.toString() };
+  return { hash: (receipt as any)?.guid || (receipt as any), fee: nativeFee.toString() };
 }
