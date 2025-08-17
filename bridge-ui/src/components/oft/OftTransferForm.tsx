@@ -3,6 +3,8 @@ import { useAccount, useWalletClient } from "wagmi";
 import type { ChainKey, UnifiedRegistry } from "@config/types";
 import clsx from "clsx";
 import { toast } from "react-toastify";
+import { sendOft } from "@lib/oftSend";
+import { getDevWalletClient } from "@lib/wallet";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -12,26 +14,6 @@ type Props = {
   amount: string;
 };
 
-async function fetchOftTx(
-  apiBase: string,
-  params: {
-    token: string;
-    origin: string;
-    destination: string;
-    amount: string;
-    addresses: Record<string, string>;
-    eids: Record<string, number>;
-    sender: string;
-  }
-) {
-  const res = await fetch(`${apiBase}/transfer`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(params)
-  });
-  if (!res.ok) throw new Error("Failed to get OFT tx");
-  return res.json();
-}
 
 const CHAIN_IDS: Record<string, number> = {
   ethereum: 1,
@@ -49,8 +31,6 @@ export default function OftTransferForm({
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [busy, setBusy] = useState(false);
-  const apiBase =
-    process.env.NEXT_PUBLIC_OFT_API_BASE || "https://api.layerzero.app/oft";
 
   const cfg = useMemo(() => {
     const route = registry.routes.find(
@@ -72,47 +52,44 @@ export default function OftTransferForm({
       </div>
 
       <button
-        disabled={!address || busy}
+        disabled={busy}
         className={clsx(
           "w-full rounded-md px-3 py-2 text-sm text-white",
           busy ? "bg-gray-700" : "bg-gray-900",
-          (!address || busy) && "opacity-50"
+          busy && "opacity-50"
         )}
         onClick={async () => {
-          if (!address || !walletClient) {
-            toast.error("Connect a wallet first");
-            return;
-          }
-          const expectedChainId = CHAIN_IDS[origin];
-          if (expectedChainId && walletClient.chain && walletClient.chain.id !== expectedChainId) {
-            toast.error(`Switch wallet to ${origin} to send`);
-            return;
-          }
-          setBusy(true);
           try {
-            const txResp = await fetchOftTx(apiBase, {
+            setBusy(true);
+            let client = walletClient;
+            let fromAddr = address;
+            if (!client || !fromAddr) {
+              const devClient = await getDevWalletClient(origin);
+              if (!devClient) {
+                toast.error("Connect a wallet first");
+                setBusy(false);
+                return;
+              }
+              // @ts-ignore
+              client = devClient;
+              // @ts-ignore
+              fromAddr = (devClient.account?.address as string) as any;
+            }
+            const expectedChainId = CHAIN_IDS[origin];
+            if (expectedChainId && (client as any)?.chain && (client as any).chain.id !== expectedChainId) {
+              toast.error(`Switch wallet to ${origin} to send`);
+              setBusy(false);
+              return;
+            }
+            const { hash } = await sendOft({
+              registry,
               token,
               origin,
               destination,
               amount: amount || "0",
-              addresses: cfg.addresses as Record<string, string>,
-              eids: cfg.eids as Record<string, number>,
-              sender: address
+              sender: fromAddr as `0x${string}`,
+              walletClient: client
             });
-
-            const tx = txResp?.tx || txResp;
-            if (!tx?.to || !tx?.data) {
-              console.log("Unexpected OFT API response", txResp);
-              toast.error("Invalid OFT API response");
-              return;
-            }
-
-            const hash = await walletClient.sendTransaction({
-              to: tx.to as `0x${string}`,
-              data: tx.data as `0x${string}`,
-              value: tx.value ? BigInt(tx.value) : undefined
-            });
-
             toast.success(`Submitted: ${hash.slice(0, 10)}…`);
           } catch (e: any) {
             console.error(e);
