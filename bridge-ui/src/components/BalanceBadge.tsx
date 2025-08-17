@@ -5,6 +5,10 @@ function resolveTokenInfo(registry: UnifiedRegistry, symbol: string, chain: Chai
   const token = registry.tokens.find((t) => t.symbol.toLowerCase() === symbol.toLowerCase());
   const decimals = token?.decimals;
 
+  if (symbol.toLowerCase() === "pyusd" && chain === "optimism") {
+    return { address: "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8", decimals };
+  }
+
   const oft = registry.routes.find(
     (r): r is Extract<RouteConfig, { bridgeType: "OFT" }> =>
       r.bridgeType === "OFT" && r.oft.token.toLowerCase() === symbol.toLowerCase()

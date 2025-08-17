@@ -87,12 +87,7 @@ export default function Home() {
                 }))
               }
               bridgeBadge={badge}
-              canAddSource={detection?.bridge === "HWR" && detection.supportsMultiSource === true}
-              onAddSource={() => {
-                if (detection?.bridge === "HWR" && detection.supportsMultiSource) {
-                  setExtraSources([...extraSources, { chain: selection.origin, amount: "" }]);
-                }
-              }}
+              canAddSource={false}
             />
             <button
               disabled={!canProceed}
