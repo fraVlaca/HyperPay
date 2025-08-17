@@ -1,0 +1,17 @@
+symbol: MOFT
+decimals: 18
+owner: "0x<OWNER>"
+topology:
+  sepolia: collateral
+  arbitrum-sepolia: collateral
+token_addresses:
+  sepolia:           "0x<OFT_SEPOLIA>"
+  arbitrum-sepolia:  "0x<OFT_ARBSEPOLIA>"
+rebalancer:
+  address: "0x<REBALANCER>"
+  policy:
+    low_watermark_pct: 0.30
+    high_watermark_pct: 0.60
+    min_rebalance_amount: "100000000000000000"
+bridge:
+  type: oft

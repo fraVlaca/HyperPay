@@ -1,0 +1,5 @@
+rebalancer:
+  configPath: /config/rebalancer.oft.json
+  checkFrequency: 30000
+  monitorOnly: false
+  withMetrics: false
