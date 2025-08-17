@@ -23,7 +23,7 @@ export default function HwrBridgePanel({
   extraSources
 }: Props) {
   return (
-    <div className="rounded-lg border border-gray-200 p-4">
+    <div className="rounded-xl border border-black/10 p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-medium">Hyperlane HWR</h3>
         <ConnectButton />
@@ -43,7 +43,7 @@ export default function HwrBridgePanel({
       </div>
 
       {destination === "optimism" && (
-        <div className="mt-4 rounded-md border p-4">
+        <div className="mt-4 rounded-xl border border-black/10 p-4">
           <div className="mb-2 text-sm font-medium">
             Multi-source send (Ethereum + Arbitrum → Optimism)
           </div>

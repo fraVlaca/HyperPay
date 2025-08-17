@@ -1,4 +1,5 @@
 import { ChainKey, UnifiedRegistry } from "@config/types";
+import ChainSelect from "./ui/ChainSelect";
 
 export type Source = { chain: ChainKey; amount: string };
 
@@ -36,33 +37,28 @@ export default function MultiSourcePanel({
     <div className="space-y-3">
       <h3 className="text-sm font-medium">Multi-source send (Ethereum + Arbitrum → {destination})</h3>
 
-      <div className="rounded-md border p-3">
+      <div className="rounded-xl border border-black/10 p-3">
         <div className="text-xs text-gray-600">Send from multiple sources to {destination}</div>
 
         <div className="mt-3 space-y-2">
           {sources.map((s, i) => (
-            <div key={i} className="rounded-md border bg-white p-2 shadow-sm transition-all">
+            <div key={i} className="rounded-xl border border-black/10 bg-white p-2 shadow-sm transition-all">
               <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_1fr_auto]">
-                <select
-                  className="rounded-md border border-gray-300 px-3 py-2"
+                <ChainSelect
+                  label="From chain"
                   value={s.chain}
-                  onChange={(e) => update(i, { chain: e.target.value as ChainKey })}
-                >
-                  {registry.chains.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  options={registry.chains.map((c) => ({ key: c.key, name: c.name }))}
+                  onChange={(val) => update(i, { chain: val as ChainKey })}
+                />
                 <input
-                  className="rounded-md border border-gray-300 px-3 py-2"
+                  className="rounded-xl border border-black/10 px-3 py-2"
                   placeholder="0.00"
                   value={s.amount}
                   onChange={(e) => update(i, { amount: e.target.value })}
                 />
                 <button
                   onClick={() => remove(i)}
-                  className="rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
+                  className="rounded-xl border px-4 py-2.5 text-sm hover:bg-brand-50"
                 >
                   Remove
                 </button>
@@ -74,7 +70,7 @@ export default function MultiSourcePanel({
         <div className="pt-2">
           <button
             onClick={add}
-            className="rounded-md bg-brand-50 px-3 py-2 text-sm text-brand-800 hover:bg-brand-100"
+            className="rounded-xl bg-brand-50 px-4 py-2.5 text-sm text-brand-800 hover:bg-brand-100"
           >
             Add source
           </button>

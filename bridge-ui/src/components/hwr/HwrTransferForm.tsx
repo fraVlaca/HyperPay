@@ -50,7 +50,7 @@ export default function HwrTransferForm({
         <span className="text-sm">{destination}</span>
       </div>
 
-      <div className="rounded-md border p-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="rounded-xl border p-3 grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
           <div className="text-xs text-gray-500">Token</div>
           <div className="text-sm">{token}</div>
@@ -62,7 +62,7 @@ export default function HwrTransferForm({
       </div>
 
       {extraSources.length > 0 && (
-        <div className="rounded-md border p-3">
+        <div className="rounded-xl border p-3">
           <div className="text-xs text-gray-500">Additional sources</div>
           <div className="mt-1 space-y-1">
             {extraSources.map((s, i) => (
@@ -79,7 +79,7 @@ export default function HwrTransferForm({
       )}
 
       {!edgesOk && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           No HWR edge found for one of the selected paths. Adjust your selection.
         </div>
       )}
@@ -87,7 +87,7 @@ export default function HwrTransferForm({
       <div className="space-y-2">
         <label className="text-xs text-gray-500">Note (optional)</label>
         <input
-          className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-900/10"
+          className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-900/10"
           placeholder="Add a note for your records"
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -96,7 +96,7 @@ export default function HwrTransferForm({
 
       <button
         disabled={!edgesOk || busy}
-        className="w-full rounded-md bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+        className="w-full rounded-xl bg-gray-900 px-4 py-2.5 text-sm text-white disabled:opacity-50"
         onClick={async () => {
           if (!edgesOk) {
             toast.error("No valid HWR edge for this route");
