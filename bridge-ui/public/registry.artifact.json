@@ -38,8 +38,8 @@
       "oft": {
         "token": "PYUSD",
         "oft": {
-          "ethereum": "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8",
-          "arbitrum": "0x46850aD61C2B7d64d08c9C754F45254596696984"
+          "ethereum": "0xa2C323fE5A74aDffAd2bf3E007E36bb029606444",
+          "arbitrum": "0xFaB5891ED867a1195303251912013b92c4fc3a1D"
         },
         "endpointIds": {
           "ethereum": 30101,
