@@ -14,7 +14,7 @@ readonly ERROR_DEPLOYMENT_FAILED=3
 
 # Logging functions
 log_info() {
-    echo "[INFO] $*"
+    echo "[INFO] $*" >&2
 }
 
 log_error() {
@@ -23,7 +23,7 @@ log_error() {
 
 log_debug() {
     if [ "${DEBUG:-0}" = "1" ]; then
-        echo "[DEBUG] $*"
+        echo "[DEBUG] $*" >&2
     fi
 }
 
