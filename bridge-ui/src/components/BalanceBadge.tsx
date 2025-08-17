@@ -1,6 +1,7 @@
 import { UnifiedRegistry, ChainKey } from "@config/types";
 import { useTokenBalance } from "../hooks/useTokenBalance";
 import { getDecimals, getTokenAddressForBalance } from "@lib/tokenAddressResolver";
+import { chainKeyToId } from "@lib/chainIds";
 
 export default function BalanceBadge({
   registry,
@@ -15,7 +16,8 @@ export default function BalanceBadge({
   const address = getTokenAddressForBalance(registry, token, origin);
   const { balance, isConnected } = useTokenBalance({
     tokenAddress: (address as any) || null,
-    decimals
+    decimals,
+    chainIdOverride: chainKeyToId[origin]
   });
 
   if (!isConnected) {
