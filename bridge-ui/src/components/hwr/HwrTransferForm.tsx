@@ -174,7 +174,7 @@ export default function HwrTransferForm({
       )}
 
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between -mt-1">
         <button
           disabled={!edgesOk || busy}
           className="rounded-xl bg-gray-900 px-4 py-2.5 text-sm text-white disabled:opacity-50"
@@ -214,7 +214,7 @@ export default function HwrTransferForm({
         >
           {busy ? "Submitting…" : "Submit normal transfer"}
         </button>
-        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[2px]">
+        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[3px]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-80"><path d="M12 8v5l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2"/></svg>
           <span>3m</span>
         </div>
@@ -276,7 +276,7 @@ export default function HwrTransferForm({
         </div>
       </Collapsible>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between -mt-1">
         <button
           disabled={!edgesOk}
           className="rounded-xl bg-brand-700 hover:bg-brand-800 px-4 py-2.5 text-sm text-white disabled:opacity-50"
@@ -284,7 +284,7 @@ export default function HwrTransferForm({
         >
           Submit Fast Transfer
         </button>
-        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[2px]">
+        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[3px]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-80"><path d="M12 8v5l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2"/></svg>
           <span>20s</span>
         </div>
