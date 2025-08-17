@@ -93,7 +93,7 @@ export default function HwrTransferForm({
       </div>
 
       <button
-        disabled={!edgesOk || !address || !walletClient || busy}
+        disabled={!edgesOk || busy}
         className="w-full rounded-md bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-50"
         onClick={async () => {
           if (!edgesOk) {
