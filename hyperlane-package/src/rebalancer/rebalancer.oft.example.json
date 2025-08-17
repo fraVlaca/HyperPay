@@ -1,0 +1,36 @@
+{
+  "warpRouteId": "WARP_ROUTE_ID",
+  "strategy": {
+    "rebalanceStrategy": "weighted",
+    "chains": {
+      "sepolia": {
+        "bridge": "0xYourTokenBridgeOftOnSepolia",
+        "bridgeLockTime": 300,
+        "bridgeMinAcceptedAmount": 1,
+        "bridgeIsWarp": false,
+        "weighted": {
+          "weight": 100,
+          "tolerance": 5
+        },
+        "override": {
+          "arbitrumsepolia": {
+            "bridge": "0xYourTokenBridgeOftOnSepoliaForArb",
+            "bridgeLockTime": 600,
+            "bridgeMinAcceptedAmount": 2,
+            "bridgeIsWarp": false
+          }
+        }
+      },
+      "arbitrumsepolia": {
+        "bridge": "0xYourTokenBridgeOftOnArbitrumSepolia",
+        "bridgeLockTime": 300,
+        "bridgeMinAcceptedAmount": 1,
+        "bridgeIsWarp": false,
+        "weighted": {
+          "weight": 50,
+          "tolerance": 10
+        }
+      }
+    }
+  }
+}
