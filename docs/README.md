@@ -10,7 +10,8 @@ Driven by a composable intent engine over Hyperlane Warp Routes 2.0 + LayerZero 
 
 - **Unified Routing**: Automatically selects and lets you interact with the optimal path between Hyperlane Warp Routes 2.0 and LayerZero OFT
 - **Fast Intent Path**: Declare an intent; solvers fulfill it on-chain. Approve-then-call is handled under the hood for a single-confirm flow that settles in seconds—an almost-instant transfer experience
-- **Modular Architecture**: Built on composable packages that can be mixed and matched for specific needs without vendor lock-in
+- **Composable Infrastructure**: Each component can be deployed independently to bring messaging, bridging, or intent capabilities to any new chain
+- **Modular by Design**: Mix and match components without vendor lock-in - use just the messaging layer, add HWR routes, or deploy the full intent stack
 - **ERC-7683 Compliance**: Follows the Open Intents Framework standard for cross-chain intent execution and settlement
 
 ## System Architecture
@@ -21,13 +22,14 @@ HyperPay creates a unified bridging experience by combining Hyperlane Warp Route
 
 ### Core Architecture Components
 
-- **L Vault (Liquidity Vault)**: Central liquidity management on Optimism
-- **Hyperlane Lock & Mint**: Connects Ethereum and Arbitrum to Optimism via collateral locking and synthetic minting
-- **LayerZero Mint & Burn**: Direct ETH ↔ ARB transfers using OFT (Omnichain Fungible Token) standard
-- **Custody Vaults**: Secure token storage on Ethereum and Arbitrum
-- **OFT Adapters**: LayerZero integration points for cross-chain transfers
-- **Rebalancer**: Automated liquidity management across custody vaults
-- **Intent Fulfill**: Solver-driven intent execution for fast transfers
+- **L Vault (Liquidity Vault)**: Central liquidity management on Optimism - *deployable to any chain as a liquidity hub*
+- **Hyperlane Messaging Layer**: Secure cross-chain communication infrastructure - *spin up on any new chain to enable messaging*
+- **Hyperlane Lock & Mint**: Connects Ethereum and Arbitrum to Optimism via collateral locking and synthetic minting - *modular warp routes deployable to any chain pair*
+- **LayerZero OFT Integration**: Direct ETH ↔ ARB transfers using OFT standard - *composable with any LayerZero-supported chain*
+- **Custody Vaults**: Secure token storage infrastructure - *reusable vault contracts for any token/chain*
+- **OFT Adapters**: LayerZero integration points - *modular adapters for cross-chain transfers*
+- **Rebalancer**: Automated liquidity management - *composable rebalancing logic for any vault setup*
+- **Intent Infrastructure**: Solver-driven execution framework - *deployable intent stack for any chain ecosystem*
 
 ### Unified Bridging Flow
 
@@ -37,46 +39,76 @@ HyperPay creates a unified bridging experience by combining Hyperlane Warp Route
 4. **Cross-Chain Settlement**: Hyperlane oracles verify and settle transactions
 5. **Token Delivery**: Recipients receive tokens on destination chain in seconds
 
-## Technical Architecture Overview
+## Modular & Composable Architecture
 
-The system is built from four main modular packages that work together to provide the complete intent-driven bridging solution:
+HyperPay is built as a **composable infrastructure stack** where each component can be deployed independently or combined to create custom bridging solutions. The four main packages are designed for maximum reusability across different chains and use cases:
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   bridge-ui     │    │  intents-stack  │    │ hyperlane-pkg   │
-│  (Next.js/React)│    │ (Kurtosis pkg)  │    │ (Kurtosis pkg)  │
+│  (Frontend UI)  │    │ (Intent Infra)  │    │ (Messaging Infra)│
 ├─────────────────┤    ├─────────────────┤    ├─────────────────┤
 │ • Route Detection│    │ • OIF Solver    │    │ • Hyperlane     │
-│ • Intent Submit │    │ • Settlement    │    │   Infrastructure│
+│ • Intent Submit │    │ • Settlement    │    │   Messaging     │
 │ • Registry Mgmt │    │ • ERC-7683      │    │ • Warp Routes   │
-│ • HWR/OFT UI    │    │ • Contracts     │    │ • Agents/Relayer│
+│ • Multi-Bridge  │    │ • Modular Stack │    │ • Agents/Relayer│
+│   Support       │    │ • Pluggable     │    │ • New Chain     │
+│                 │    │   Backends      │    │   Onboarding    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          └───────────────────────┼───────────────────────┘
                                  │
                     ┌─────────────────┐
                     │ hyperlane-tools │
-                    │   (CLI Tools)   │
+                    │ (Deploy Tools)  │
                     ├─────────────────┤
                     │ • Registry Build│
                     │ • HWR Deploy    │
-                    │ • OFT Wiring    │
+                    │ • Chain Setup   │
                     │ • Artifacts     │
                     └─────────────────┘
+
+🔧 COMPOSABLE: Each package can be used independently
+🚀 REUSABLE: Deploy messaging/bridging/intents to any new chain
+🔌 PLUGGABLE: Mix and match components for custom solutions
 ```
 
-### Component Interactions
+### Modular Deployment Patterns
 
-1. **Registry Coordination**: `hyperlane-tools` generates unified registry artifacts that `bridge-ui` consumes for route detection
-2. **Intent Submission**: `bridge-ui` submits ERC-7683 compliant intents to contracts deployed by `intents-stack`
-3. **Settlement**: `intents-stack` solvers monitor and fulfill intents using Hyperlane oracles and settlement contracts
-4. **Infrastructure**: `hyperlane-package` provides the underlying Hyperlane messaging and bridging infrastructure
+**🌐 Bring Messaging to New Chains**
+- Deploy `hyperlane-package` alone to add secure cross-chain messaging to any new chain
+- Spin up validators, relayers, and mailbox contracts with one-click Kurtosis deployment
+- Instantly connect new chains to the Hyperlane network
+
+**🌉 Add Bridging Infrastructure**
+- Use `hyperlane-tools` to deploy HWR 2.0 warp routes between any chain pairs
+- Configure multi-collateral to synthetic topologies for any token
+- Reuse existing messaging infrastructure or deploy fresh
+
+**⚡ Deploy Intent Infrastructure**
+- Spin up `intents-stack` on any chain to enable solver-driven intent execution
+- Modular settlement backends: plug in Hyperlane, Wormhole, or custom oracles
+- ERC-7683 compliant contracts work with any intent ecosystem
+
+**🎯 Complete Bridging Solution**
+- Combine all packages for full-featured intent-driven bridging
+- `bridge-ui` provides unified interface across all deployed infrastructure
+- Registry system automatically discovers and routes across available bridges
+
+### Component Interactions & Reusability
+
+1. **Messaging Layer**: `hyperlane-package` provides reusable cross-chain messaging for any application
+2. **Bridge Infrastructure**: `hyperlane-tools` deploys composable warp routes that work with any messaging layer
+3. **Intent Execution**: `intents-stack` creates pluggable solver infrastructure that works with any settlement backend
+4. **Unified Interface**: `bridge-ui` provides composable frontend that can route across any deployed bridges
 
 ## Component Deep Dive
 
-### 1. Bridge UI (Next.js/React)
+### 1. Bridge UI (Composable Frontend)
 
-The unified frontend interface that provides seamless routing between Hyperlane Warp Routes 2.0 and LayerZero OFT.
+**Reusable Interface Layer**: The bridge UI is designed as a composable frontend that can work with any combination of deployed bridge infrastructure. It automatically discovers available routes and provides a unified interface regardless of the underlying bridge technology.
+
+**Multi-Bridge Support**: Seamlessly routes between Hyperlane Warp Routes 2.0, LayerZero OFT, and any other bridges added to the registry system.
 
 **Key Files:**
 - `src/lib/routeDetector.ts` - Intelligent route detection logic
@@ -101,9 +133,13 @@ export function detectRoute(reg: UnifiedRegistry, input: DetectionInput): Detect
 4. Intent submitted to input settler contract
 5. Solvers monitor and fulfill intent on destination chain
 
-### 2. Intents Stack (Kurtosis Package)
+### 2. Intents Stack (Modular Intent Infrastructure)
 
-Built on the Open Intents Framework, this package orchestrates the solver-side infrastructure for intent processing and settlement.
+**Composable Intent Framework**: Built on the Open Intents Framework, this package provides **modular intent infrastructure** that can be deployed to any chain ecosystem. Each component is designed for maximum reusability and composability.
+
+**Pluggable Architecture**: The intent stack is designed with pluggable backends - you can mix and match settlement layers (Hyperlane, Wormhole, custom), storage backends (file, memory, database), and solver strategies based on your specific needs.
+
+**Independent Deployment**: Deploy just the solver infrastructure to add intent capabilities to existing bridges, or combine with messaging and bridge packages for a complete solution.
 
 **Key Files:**
 - `main.star` - Main orchestration entry point
@@ -127,21 +163,30 @@ def run(plan, args):
     specs_info = specs_module.launch(plan, args, solver_info)
 ```
 
-**Settlement Configuration:**
-- Supports Hyperlane and custom settlement backends
-- Oracle address mapping for cross-chain verification
-- ERC-7683 compliant intent processing
-- Configurable dispute periods and confirmation requirements
+**Modular Settlement Backends:**
+- **Hyperlane Backend**: Plug into existing Hyperlane messaging infrastructure
+- **Custom Backends**: Bring your own oracle system or settlement layer
+- **Wormhole Support**: Easy integration with Wormhole messaging (configurable)
+- **Multi-Backend**: Run multiple settlement backends simultaneously
 
-**Solver Implementation:**
-- Rust microservice that monitors on-chain events
-- Processes intents following ERC-7683 standard
-- Modular storage backends (file, memory)
-- RESTful API for intent submission and status
+**Composable Solver Infrastructure:**
+- **Rust Microservice**: Containerized solver that can run anywhere
+- **Pluggable Storage**: File, memory, database, or custom storage backends
+- **Modular Discovery**: Monitor any EVM chain or custom event sources
+- **RESTful API**: Standard interface that works with any frontend
 
-### 3. Hyperlane Package (Kurtosis Package)
+**Reusable Components:**
+- **Contract Templates**: ERC-7683 compliant contracts deployable to any EVM chain
+- **Configuration Generator**: Dynamic config generation for any chain setup
+- **Monitoring Stack**: Reusable event monitoring for any blockchain
 
-Launches Hyperlane off-chain agents (validators, relayer) and on-chain contracts in one click, supporting HWR 2.0 deployment.
+### 3. Hyperlane Package (Messaging Infrastructure)
+
+**One-Click Chain Onboarding**: This package enables **any new chain** to join the Hyperlane network with a single deployment. Spin up the complete messaging infrastructure needed to connect any long-tail or custom chain to the broader ecosystem.
+
+**Modular Infrastructure Deployment**: Deploy just the components you need - messaging only, bridges only, or the complete stack. Each module is designed to work independently or as part of a larger system.
+
+**Reusable for Any Use Case**: While HyperPay uses this for PyUSD bridging, the same infrastructure can power any cross-chain application - DeFi protocols, NFT bridges, governance systems, or custom dApps.
 
 **Key Files:**
 - `main.star` - Phase-based deployment orchestration
@@ -174,32 +219,138 @@ def run(plan, args):
     run_send_test(plan, test_config, config.warp_routes)
 ```
 
-**Warp Route Features:**
-- Multi-collateral to synthetic token topology
-- Automatic liquidity seeding
-- Lock/release and mint/burn modes
-- Integration with Hyperlane CLI for deployment
+**Composable Warp Route System:**
+- **Flexible Topologies**: Multi-collateral to synthetic, hub-and-spoke, or custom arrangements
+- **Any Token Support**: Deploy warp routes for any ERC-20 token on any supported chain
+- **Liquidity Management**: Automatic seeding with configurable liquidity strategies
+- **Mode Selection**: Lock/release, mint/burn, or hybrid modes based on token requirements
+- **Reusable Templates**: Standard configurations that work across different token types
 
-### 4. Hyperlane Tools (CLI Utilities)
+**Infrastructure Modules:**
+- **Messaging Core**: Mailbox contracts and core messaging infrastructure
+- **Validator Network**: Configurable validator sets for any security requirements
+- **Relayer Services**: Message delivery infrastructure that scales with usage
+- **Agent Configuration**: Dynamic configuration generation for any chain setup
 
-Minimal TypeScript CLI toolkit for generating and deploying Hyperlane HWR 2.0 multi-collateral routes and building unified registry JSON.
+### 4. Hyperlane Tools (Deployment & Registry Tools)
+
+**Chain Setup Automation**: Minimal TypeScript CLI toolkit that automates the deployment of Hyperlane infrastructure to any new chain. Generate configurations, deploy contracts, and build registries with simple commands.
+
+**Composable Registry System**: Build unified registries that can include any combination of bridge types - HWR routes, LayerZero OFT, custom bridges, or future bridge technologies. The registry system is designed to be extensible and bridge-agnostic.
+
+**Reusable Deployment Patterns**: Standard deployment scripts that work across different chains, tokens, and bridge configurations. Easily adapt for new tokens or chain combinations.
 
 **Key Scripts:**
 - `extend-multicollateral.ts` - Generate and deploy HWR configurations
 - `deploy-oft-native.ts` - Deploy LayerZero OFT Native ETH adapters
 - `build-registry.ts` - Build merged registry JSON for UI consumption
 
-**Registry Building:**
+**Modular Deployment Commands:**
 ```bash
-# Generate HWR configuration and artifacts
-pnpm extend -- --config ./samples/mainnet-pyusd-multicollateral.json
+# Deploy messaging infrastructure to new chain
+pnpm extend -- --config ./configs/new-chain-messaging.json
 
-# Deploy warp routes
-pnpm extend -- --config ./samples/mainnet-pyusd-multicollateral.json --deploy
+# Add HWR routes for any token
+pnpm extend -- --config ./configs/custom-token-routes.json --deploy
 
-# Build unified registry for UI
-pnpm registry:build
+# Build registry including all available bridges
+pnpm registry:build --include-all-bridges
+
+# Generate config templates for new chains
+pnpm generate-config -- --chain-id 12345 --rpc-url https://new-chain-rpc
 ```
+
+## Composability & Reusability Examples
+
+### 🚀 Scenario 1: Bring Messaging to a New Chain
+
+**Goal**: Add secure cross-chain messaging to a new L2 or custom chain
+
+**Components Needed**: `hyperlane-package` only
+
+```yaml
+# Deploy just messaging infrastructure
+chains:
+  - name: new-l2-chain
+    rpc_url: https://new-l2-rpc-url/
+    chain_id: 12345
+    deploy_core: true        # Deploy mailbox and core contracts
+    deploy_warp: false       # Skip bridge contracts
+    
+agents:
+  validators: 3              # Minimal validator set
+  relayer: true             # Enable message delivery
+```
+
+**Result**: New chain can send/receive secure cross-chain messages, ready for any dApp integration.
+
+---
+
+### 🌉 Scenario 2: Add Token Bridging to Existing Chains
+
+**Goal**: Create warp routes for a new token between existing Hyperlane-connected chains
+
+**Components Needed**: `hyperlane-tools` + existing messaging infrastructure
+
+```json
+{
+  "token": { "symbol": "NEWTOKEN", "decimals": 18 },
+  "collaterals": ["ethereum", "polygon"],
+  "synthetic": "arbitrum",
+  "reuse_messaging": true,    // Use existing Hyperlane infrastructure
+  "deploy_only_warp": true    // Skip core messaging contracts
+}
+```
+
+**Result**: New token can be bridged between chains without deploying new messaging infrastructure.
+
+---
+
+### ⚡ Scenario 3: Add Intent Capabilities to Existing Bridges
+
+**Goal**: Enable fast intent-driven transfers on existing bridge infrastructure
+
+**Components Needed**: `intents-stack` only
+
+```yaml
+# Plug intent layer into existing bridges
+settlement:
+  backend: hyperlane          # Use existing Hyperlane messaging
+  reuse_infrastructure: true  # Don't deploy new messaging
+  
+solver:
+  monitor_existing_bridges: true  # Watch existing bridge contracts
+  custom_settlement_contracts: false  # Use existing settlement
+```
+
+**Result**: Existing bridges now support fast intent-driven transfers with solver competition.
+
+---
+
+### 🎯 Scenario 4: Complete Custom Bridging Solution
+
+**Goal**: Deploy full intent-driven bridging for a custom token ecosystem
+
+**Components Needed**: All packages with custom configuration
+
+```yaml
+# Full stack deployment with custom parameters
+messaging:
+  deploy_to_chains: ["custom-chain-1", "custom-chain-2"]
+  validator_set: "custom"
+  
+bridges:
+  tokens: ["CUSTOM-TOKEN-A", "CUSTOM-TOKEN-B"]
+  topology: "hub-and-spoke"
+  hub_chain: "custom-chain-1"
+  
+intents:
+  settlement_backend: "hyperlane"
+  solver_network: "permissionless"
+  api_endpoints: ["api1.custom.com", "api2.custom.com"]
+```
+
+**Result**: Complete intent-driven bridging solution tailored to specific ecosystem needs.
 
 ## Configuration Examples
 
