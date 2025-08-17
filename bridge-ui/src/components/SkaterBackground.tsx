@@ -11,7 +11,7 @@ export default function SkaterBackground({ className }: Props) {
     <div
       aria-hidden
       className={clsx(
-        "pointer-events-none fixed inset-x-0 bottom-4 z-0 h-28 sm:h-40 overflow-visible",
+        "pointer-events-none fixed inset-x-0 bottom-0 z-0 h-24 sm:h-36 overflow-visible",
         className
       )}
     >
