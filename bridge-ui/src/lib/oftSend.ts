@@ -26,8 +26,8 @@ function resolveOft(reg: UnifiedRegistry, token: string, origin: ChainKey, desti
   const eids = (route.oft.endpointIds || {}) as Record<string, number>;
   const tokenAddr = addrs[origin];
   const toEid = eids[destination];
-  if (!tokenAddr) throw new Error("No OFT token on origin");
-  if (!toEid) throw new Error("Missing LayerZero endpoint id for destination");
+  if (!tokenAddr) throw new Error(`No OFT adapter address configured on ${origin} for ${token}`);
+  if (!toEid) throw new Error(`Missing LayerZero endpoint id for destination ${destination}`);
   return { tokenAddr, toEid };
 }
 
@@ -57,12 +57,17 @@ export async function sendOft(params: {
   const recipientBytes32 = padHex(getAddress(sender), { size: 32 });
   const emptyBytes = "0x";
 
-  const out: readonly [bigint, bigint] = await publicClient.readContract({
-    address: tokenAddr,
-    abi: OFT_ABI,
-    functionName: "quoteSend",
-    args: [Number(toEid), recipientBytes32, amountWei, emptyBytes]
-  }) as any;
+  let out: readonly [bigint, bigint];
+  try {
+    out = await publicClient.readContract({
+      address: tokenAddr,
+      abi: OFT_ABI,
+      functionName: "quoteSend",
+      args: [Number(toEid), recipientBytes32, amountWei, emptyBytes]
+    }) as any;
+  } catch (e: any) {
+    throw new Error(e?.shortMessage || e?.message || "quoteSend reverted; verify OFT adapter address and peers");
+  }
   const nativeFee = (out?.[0] || 0n) as bigint;
 
   const hash: `0x${string}` = await walletClient.writeContract({
