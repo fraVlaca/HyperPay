@@ -1,5 +1,6 @@
-import { createWalletClient, custom, http } from "viem";
+import { createWalletClient, http } from "viem";
 import { mainnet, arbitrum, optimism } from "viem/chains";
+import { privateKeyToAccount } from "viem/accounts";
 
 const CHAIN_TO_VIEM: Record<string, any> = {
   ethereum: mainnet,
@@ -16,7 +17,7 @@ export async function getDevWalletClient(origin: string) {
     (typeof process !== "undefined" ? (process as any).env?.[`NEXT_PUBLIC_${origin.toUpperCase()}_RPC_URL`] : undefined) ||
     (typeof process !== "undefined" ? (process as any).env?.[`NEXT_PUBLIC_${origin.toUpperCase()}_RPC`] : undefined);
   const transport = http(rpc);
-  const account = `0x${pk.replace(/^0x/, "")}` as `0x${string}`;
+  const account = privateKeyToAccount((pk.startsWith("0x") ? pk : `0x${pk}`) as `0x${string}`);
   const walletClient = createWalletClient({
     chain,
     transport,
