@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { sendOft } from "@lib/oftSend";
 import { getDevWalletClient } from "@lib/wallet";
 import Collapsible from "@components/ui/Collapsible";
-import { buildCrossChainOrder, toUnits } from "@lib/fastIntent";
+import { buildCrossChainOrder, toUnits, sendFastIntent } from "@lib/fastIntent";
 
 type Props = {
   registry: UnifiedRegistry;
@@ -109,30 +109,27 @@ export default function OftTransferForm({
       const inputAmount = toUnits(amount || "0", decimals);
       const minOutputAmount = toUnits(minOut || "0", decimals);
       const destAddr = (destinationAddress || from) as `0x${string}`;
-      const settle = settlementAddress as `0x${string}`;
 
-      const order = buildCrossChainOrder({
-        registry,
-        tokenSymbol: token,
+      const now = Math.floor(Date.now() / 1000);
+      const absFill = now + (fillDeadline || 7200);
+
+      const { hash } = await sendFastIntent({
         origin,
         destination,
-        decimals,
-        swapper: from as `0x${string}`,
-        destinationAddress: destAddr,
-        inputAmount,
-        minOutputAmount,
-        settlementAddress: settle,
+        walletClient: client,
+        sender: from as `0x${string}`,
         inputToken,
+        inputAmount,
         outputToken,
-        initiateInSeconds: initiateDeadline,
-        fillInSeconds: fillDeadline
+        outputAmount: minOutputAmount,
+        outputRecipient: destAddr,
+        fillDeadline: absFill
       });
 
-      console.debug("[fast-intent][OFT] order", order);
-      toast.info("Fast transfer intent prepared. Check console for details.");
+      toast.success(`Intent submitted: ${hash.slice(0, 10)}…`);
     } catch (e: any) {
       console.error(e);
-      toast.error(e?.message || "Failed to prepare fast transfer");
+      toast.error(e?.message || "Failed to submit fast transfer intent");
     }
   }
 
