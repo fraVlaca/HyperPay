@@ -1,6 +1,10 @@
 FROM node:20-alpine
 WORKDIR /app
-COPY . /app
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate || true
-RUN if [ -f package.json ]; then pnpm install --frozen-lockfile || true; fi
-CMD ["node", "dist/rebalancer/index.js"]
+
+# Copy only what we need
+COPY hyperlane-package/src/rebalancer/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Default command uses args passed at runtime, e.g.:
+# docker run --rm -v $(pwd)/config:/config image --config /config/rebalancer.json --monitorOnly
+ENTRYPOINT ["/app/entrypoint.sh"]
