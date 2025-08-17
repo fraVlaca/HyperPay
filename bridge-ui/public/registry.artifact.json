@@ -23,7 +23,7 @@
           "arbitrum": "0x46850aD61C2B7d64d08c9C754F45254596696984"
         },
         "syntheticToken": {
-          "optimism": "0xF22D143c389d5f9Ac231Ae68eF9A556393571469"
+          "optimism": "0x2A0B01E072b3d68249A2b3666cB90585eC4bd79e"
         },
         "edges": [
           { "from": "ethereum", "to": "optimism" },
