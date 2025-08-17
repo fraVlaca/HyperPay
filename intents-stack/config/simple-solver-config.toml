@@ -1,0 +1,64 @@
+[solver]
+id = "oif-e2e-solver"
+
+[networks.11155111]
+rpc_url = "https://ethereum-sepolia-rpc.publicnode.com"
+input_settler_address = "0xcA919F1EeAA377009E11a5C5c9FA5923fC3eD563"
+output_settler_address = "0x331B0c3b82C8C3CF06DFD2a12905Cc311589FB6D"
+[[networks.11155111.tokens]]
+address = "0x352f1c7ffa598d0698c1D8D2fCAb02511c6fF3e9"
+symbol = "USDC"
+decimals = 6
+
+[networks.421614]
+rpc_url = "https://api.zan.top/arb-sepolia"
+input_settler_address = "0xCe81010d0A47FF13Cc19105E8Ef7B597aA8D3460"
+output_settler_address = "0x92DAe04879b394104491d5153C36d814bEbcB388"
+[[networks.421614.tokens]]
+address = "0x61714300b991Cfc2BD336cb1745F01463163A988"
+symbol = "USDC"
+decimals = 6
+
+[storage]
+primary = "memory"
+cleanup_interval_seconds = 3600
+[storage.implementations.memory]
+
+[account]
+provider = "local"
+[account.config]
+private_key = "0x0820e79cde729336c29c6d3f5102b522f625b4b1e5801f097848600a23e15cb2"
+
+[delivery]
+min_confirmations = 1
+[delivery.providers]
+
+[order]
+[order.implementations.eip7683]
+[order.execution_strategy]
+strategy_type = "simple"
+[order.execution_strategy.config]
+max_gas_price_gwei = 100
+
+[settlement]
+[settlement.domain]
+chain_id = 1
+address = "0x0000000000000000000000000000000000000000"
+[settlement.implementations.eip7683]
+oracle_addresses = { 11155111 = "0xa39434521088d9a50325BC50eC2f50660e06Df34", 421614 = "0x7711d06A5F6Fc7772aa109D2231635CEC3850dBa" }
+dispute_period_seconds = 1
+
+[sources]
+[sources.implementations.eip7683]
+enabled = true
+
+[discovery]
+enabled = false
+[discovery.implementations]
+
+[api]
+enabled = true
+host = "0.0.0.0"
+port = 3000
+timeout_seconds = 30
+max_request_size = 1048576

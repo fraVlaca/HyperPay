@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  solver:
+    image: oif-solver:local-fixed
+    container_name: oif-solver-e2e
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./test-solver-minimal.toml:/config.toml:ro
+      - solver-data:/data
+    command: ["--config", "/config.toml"]
+    environment:
+      - RUST_LOG=info,solver_core=debug
+    restart: unless-stopped
+
+volumes:
+  solver-data:

@@ -1,0 +1,60 @@
+--- a/crates/solver-discovery/src/implementations/onchain/_7683.rs
++++ b/crates/solver-discovery/src/implementations/onchain/_7683.rs
+@@ -247,7 +247,25 @@ impl Onchain7683 {
+ 					// Get last processed block for this chain
+ 					let last_block_num = {
+ 						let blocks = last_blocks.lock().await;
+-						*blocks.get(&chain_id).unwrap_or(&0)
++						let stored_block = *blocks.get(&chain_id).unwrap_or(&0);
++						
++						// If no stored block (first run), we need to get current block first
++						if stored_block == 0 {
++							match provider.get_block_number().await {
++								Ok(current) => {
++									// Start from 100 blocks ago to avoid huge ranges
++									let start_block = if current > 100 {
++										current.saturating_sub(100)
++									} else {
++										0
++									};
++									start_block
++								}
++								Err(_) => 0, // Fallback to 0 if we can't get current block
++							}
++						} else {
++							stored_block
++						}
+ 					};
+ 
+ 					// Get current block
+@@ -283,8 +301,16 @@ impl Onchain7683 {
+ 
+ 					let filter = Filter::new()
+ 						.address(vec![settler_address])
+ 						.event_signature(vec![open_sig])
+-						.from_block(last_block_num + 1)
+-						.to_block(current_block);
++						.from_block(last_block_num + 1);
++					
++					// Limit the range to avoid "invalid block range" errors
++					let to_block = if current_block - last_block_num > 1000 {
++						last_block_num + 1000
++					} else {
++						current_block
++					};
++					
++					let filter = filter.to_block(to_block);
+ 
+ 					// Get logs
+ 					let logs = match provider.get_logs(&filter).await {
+@@ -303,9 +329,9 @@ impl Onchain7683 {
+ 					}
+ 
+ 					// Update last processed block
+ 					{
+ 						let mut blocks = last_blocks.lock().await;
+-						blocks.insert(chain_id, current_block);
++						blocks.insert(chain_id, to_block);
+ 					}
+ 				},
+ 				_ = stop_rx.recv() => {
