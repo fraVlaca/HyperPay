@@ -9,7 +9,7 @@ export default function DirectionSwap({ onSwap, disabled }: Props) {
       <button
         disabled={disabled}
         onClick={onSwap}
-        className="rounded-full border border-gray-300 bg-white p-2 text-gray-700 shadow-sm transition hover:shadow disabled:opacity-40"
+        className="rounded-full border border-black/10 bg-white p-2 text-gray-700 shadow-sm transition hover:shadow disabled:opacity-40"
         aria-label="Swap direction"
         title="Swap direction"
       >

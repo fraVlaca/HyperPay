@@ -5,3 +5,12 @@
 html, body, #__next {
   height: 100%;
 }
+
+body {
+  --bg-a: rgba(91, 60, 196, 0.12);
+  --bg-b: rgba(141, 116, 229, 0.08);
+  background:
+    radial-gradient(1000px 500px at 50% -200px, var(--bg-a), transparent 60%) no-repeat,
+    radial-gradient(800px 400px at 90% 10%, var(--bg-b), transparent 60%) no-repeat,
+    #fafafa;
+}
