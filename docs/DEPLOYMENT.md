@@ -15,9 +15,9 @@ Environment
 - Use very small amounts for tests: $0.5–$1 (e.g., 0.6 PYUSD).
 
 RPCs
-- ETH: https://eth-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk
-- OP:  https://opt-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk
-- ARB: https://arb-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk
+- ETH: <your Ethereum mainnet RPC URL>
+- OP:  <your Optimism mainnet RPC URL>
+- ARB: <your Arbitrum One mainnet RPC URL>
 
 Canonical Tokens
 - PYUSD (Ethereum): 0x6c3ea9036406852006290770BEdFcAbA0e23A0e8
@@ -66,9 +66,9 @@ Canonical Tokens
 8) Alternative: Deploy via Hyperlane wizard
 - Export env:
   HYP_KEY=&lt;your_private_key&gt;
-  ETHEREUM_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk
-  OPTIMISM_RPC_URL=https://opt-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk
-  ARBITRUM_RPC_URL=https://arb-mainnet.g.alchemy.com/v2/lC2HDPB2Vs7-p-UPkgKD-VqFulU5elyk
+  ETHEREUM_RPC_URL=<your Ethereum mainnet RPC URL>
+  OPTIMISM_RPC_URL=<your Optimism mainnet RPC URL>
+  ARBITRUM_RPC_URL=<your Arbitrum One mainnet RPC URL>
 - Run: npx @hyperlane-xyz/cli@latest warp deploy --wizard
 - Prompts:
   • ERC20 (not NFT)
