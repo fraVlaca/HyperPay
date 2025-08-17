@@ -1,0 +1,103 @@
+# E2E Test Configuration for Ethereum Sepolia <-> Arbitrum Sepolia
+# Using pre-deployed OIF contracts with Hyperlane settlement
+
+mode:
+  contracts:
+    build_from_source: false
+    image: ghcr.io/openintentsframework/oif-contracts:latest
+    git_ref: main
+  solver:
+    build_from_source: false
+    image: oif-solver:local-fixed-v7  # Use locally built image with nonce + discovery + fill encoding fix
+    git_ref: main
+  specs:
+    enabled: false  # Disable for E2E test
+    
+modules:
+  contracts: true  # Import existing addresses
+  solver: true
+  specs: false
+
+chains:
+  # Ethereum Sepolia
+  - chain_id: 11155111
+    chain_type: ethereum
+    rpc_url: https://ethereum-sepolia-rpc.publicnode.com
+    deploy: false  # Already deployed
+    input_settler_address: "0xcA919F1EeAA377009E11a5C5c9FA5923fC3eD563"
+    output_settler_address: "0x331B0c3b82C8C3CF06DFD2a12905Cc311589FB6D"
+    hyperlane_oracle_address: "0xa39434521088d9a50325BC50eC2f50660e06Df34"
+    tokens:
+      - address: "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14"
+        symbol: WETH
+        decimals: 18
+        
+  # Arbitrum Sepolia
+  - chain_id: 421614
+    chain_type: ethereum
+    rpc_url: https://sepolia-rollup.arbitrum.io/rpc
+    deploy: false  # Already deployed
+    input_settler_address: "0xCe81010d0A47FF13Cc19105E8Ef7B597aA8D3460"
+    output_settler_address: "0x92DAe04879b394104491d5153C36d814bEbcB388"
+    hyperlane_oracle_address: "0x7711d06A5F6Fc7772aa109D2231635CEC3850dBa"
+    tokens:
+      - address: "0x980B62Da83eFf3D4576C647993b0c1D7faf17c73"
+        symbol: WETH
+        decimals: 18
+
+solver:
+  storage:
+    primary: file
+    cleanup_interval_seconds: 3600
+    file:
+      storage_path: ./data/storage
+      ttl_orders: 0
+      ttl_intents: 86400
+      ttl_order_by_tx_hash: 86400
+  settlement:
+    backend: hyperlane
+    hyperlane:
+      preset_mode: override
+      oracle_addresses:
+        "11155111": "0xa39434521088d9a50325BC50eC2f50660e06Df34"
+        "421614": "0x7711d06A5F6Fc7772aa109D2231635CEC3850dBa"
+    domain:
+      chain_id: 11155111
+      address: "0x0000000000000000000000000000000000000000"
+  chain_configs:
+    - chain_id: 11155111
+      network_id: ethereum-sepolia
+      wallet:
+        private_key: "0xd32b4f4ee569fefe3caa3bce14a7504de18b6153feecb4672734b818e79220d7"
+      tokens:
+        - address: "0x352f1c7ffa598d0698c1D8D2fCAb02511c6fF3e9"
+          symbol: USDC
+          decimals: 6
+      contracts:
+        input_settler: "0xcA919F1EeAA377009E11a5C5c9FA5923fC3eD563"
+        output_settler: "0x331B0c3b82C8C3CF06DFD2a12905Cc311589FB6D"
+        hyperlane_oracle: "0xa39434521088d9a50325BC50eC2f50660e06Df34"
+        
+    - chain_id: 421614
+      network_id: arbitrum-sepolia
+      wallet:
+        private_key: "0xd32b4f4ee569fefe3caa3bce14a7504de18b6153feecb4672734b818e79220d7"
+      tokens:
+        - address: "0x61714300b991Cfc2BD336cb1745F01463163A988"
+          symbol: USDC
+          decimals: 6
+      contracts:
+        input_settler: "0xCe81010d0A47FF13Cc19105E8Ef7B597aA8D3460"
+        output_settler: "0x92DAe04879b394104491d5153C36d814bEbcB388"
+        hyperlane_oracle: "0x7711d06A5F6Fc7772aa109D2231635CEC3850dBa"
+        
+# Settlement configuration 
+settlement:
+  hyperlane:
+    enabled: true
+    mailboxes:
+      11155111: "0xfFAEF09B3cd11D9b20d1a19bECca54EEC2884766"
+      421614: "0x598facE78a4302f11E3de0bee1894Da0b2Cb71F8"
+    
+# Extensions (empty for now)
+extensions: []

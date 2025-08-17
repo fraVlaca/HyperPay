@@ -1,0 +1,96 @@
+mode:
+  contracts:
+    build_from_source: false
+    image: ghcr.io/openintentsframework/oif-contracts:latest
+    git_ref: main
+  solver:
+    build_from_source: false
+    image: ghcr.io/openintentsframework/oif-solvers:latest
+    git_ref: main
+  specs:
+    enabled: true
+    build_from_source: false
+    image: swaggerapi/swagger-ui:latest
+    oif_specs_git_ref: main
+
+modules:
+  contracts: true
+  solver: true
+  specs: true
+
+chains:
+  - chain_id: 8453
+    chain_type: ethereum
+    rpc_url: https://base.llamarpc.com
+    deploy: false
+    input_settler_address: 0x0000000000000000000000000000000000000001
+    output_settler_address: 0x0000000000000000000000000000000000000002
+    tokens:
+      - address: 0x0000000000000000000000000000000000000003
+        symbol: USDC
+        decimals: 6
+  - chain_id: 42161
+    chain_type: ethereum
+    rpc_url: https://arb1.arbitrum.io/rpc
+    deploy: true
+    deployment_flavor: escrow
+    deploy_output_settler: true
+    deploy_oracle: false
+    wallet:
+      private_key: ${ARBITRUM_DEPLOYER_PK}
+
+solver:
+  storage:
+    primary: file
+    cleanup_interval_seconds: 3600
+    file:
+      storage_path: ./data/storage
+      ttl_orders: 0
+      ttl_intents: 86400
+      ttl_order_by_tx_hash: 86400
+  account:
+    private_key: ${SOLVER_PK}
+  delivery:
+    min_confirmations: 1
+    providers:
+      - name: origin
+        network_id: 8453
+      - name: destination
+        network_id: 42161
+  discovery:
+    enabled: false
+    onchain_eip7683:
+      network_id: 8453
+    offchain_eip7683:
+      enabled: false
+      api_host: 0.0.0.0
+      api_port: 8081
+      network_ids: [8453, 42161]
+  order:
+    execution_strategy:
+      strategy_type: simple
+      config:
+        max_gas_price_gwei: 100
+  settlement:
+    backend: hyperlane
+    domain:
+      chain_id: 1
+      address: 0x0000000000000000000000000000000000000000
+    dispute_period_seconds: 1
+    hyperlane:
+      preset_mode: chain_type
+      oracle_addresses: {}
+    custom:
+      oracle_addresses: {}
+  api:
+    enabled: true
+    host: 0.0.0.0
+    port: 3000
+    timeout_seconds: 30
+    max_request_size: 1048576
+
+specs:
+  enabled: true
+  port: 8088
+  servers:
+    - http://{{ solver-host }}:{{ solver-port }}/api
