@@ -139,7 +139,17 @@ function encodeStandardOrder(params: {
           { name: "inputs", type: "uint256[2][]" },
           {
             name: "outputs",
-            type: "tuple(bytes32 oracle, bytes32 settler, uint256 chainId, bytes32 token, uint256 amount, bytes32 recipient, bytes call, bytes context)[]",
+            type: "tuple[]",
+            components: [
+              { name: "oracle", type: "bytes32" },
+              { name: "settler", type: "bytes32" },
+              { name: "chainId", type: "uint256" },
+              { name: "token", type: "bytes32" },
+              { name: "amount", type: "uint256" },
+              { name: "recipient", type: "bytes32" },
+              { name: "call", type: "bytes" },
+              { name: "context", type: "bytes" }
+            ],
           },
         ],
       } as const,
