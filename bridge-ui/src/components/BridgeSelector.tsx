@@ -54,7 +54,9 @@ export default function BridgeSelector({
   canAddSource,
   onAddSource
 }: Props) {
-  const chains = registry.chains;
+  const chains = registry.chains.filter((c) =>
+    ["ethereum", "optimism", "arbitrum"].includes(c.key)
+  );
   const pyusdSymbol =
     registry.tokens.find((t) => t.symbol.toLowerCase() === "pyusd")?.symbol || "PYUSD";
 

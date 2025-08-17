@@ -19,7 +19,10 @@ export default function MultiSourcePanel({
   onSourcesChange
 }: Props) {
   function add() {
-    const first = registry.chains[0]?.key ?? "ethereum";
+    const allowed = registry.chains.filter((c) =>
+      ["ethereum", "optimism", "arbitrum"].includes(c.key)
+    );
+    const first = allowed[0]?.key ?? "ethereum";
     onSourcesChange([...sources, { chain: first as ChainKey, amount: "" }]);
   }
   function update(i: number, patch: Partial<Source>) {
@@ -47,7 +50,9 @@ export default function MultiSourcePanel({
                 <ChainSelect
                   label="From chain"
                   value={s.chain}
-                  options={registry.chains.map((c) => ({ key: c.key, name: c.name }))}
+                  options={registry.chains
+                    .filter((c) => ["ethereum", "optimism", "arbitrum"].includes(c.key))
+                    .map((c) => ({ key: c.key, name: c.name }))}
                   onChange={(val) => update(i, { chain: val as ChainKey })}
                 />
                 <input
