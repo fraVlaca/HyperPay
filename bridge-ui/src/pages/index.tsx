@@ -10,9 +10,9 @@ import MultiSourcePanel, { Source } from "@components/MultiSourcePanel";
 export default function Home() {
   const [registry, setRegistry] = useState<UnifiedRegistry | null>(null);
   const [selection, setSelection] = useState({
-    token: "ETH",
-    origin: "arbitrum" as ChainKey,
-    destination: "ethereum" as ChainKey,
+    token: "PYUSD",
+    origin: "ethereum" as ChainKey,
+    destination: "optimism" as ChainKey,
     amount: ""
   });
   const [extraSources, setExtraSources] = useState<Source[]>([]);
@@ -28,8 +28,7 @@ export default function Home() {
         amount: last.amount || ""
       });
     } else {
-      // Ensure we never start with empty origin/destination
-      setSelection((prev) => ({ ...prev, origin: "ethereum", destination: "optimism" }));
+      setSelection((prev) => ({ ...prev, token: "PYUSD", origin: "ethereum", destination: "optimism" }));
     }
   }, []);
 
@@ -71,6 +70,11 @@ export default function Home() {
       : detection?.bridge === "OFT"
       ? { text: "Using LayerZero OFT", tone: "warning" as const }
       : { text: "No route available" };
+
+  const canProceed =
+    detection?.bridge === "HWR" || detection?.bridge === "OFT"
+      ? Boolean(selection.amount && selection.amount.length > 0 && selection.origin !== selection.destination)
+      : false;
 
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-6">

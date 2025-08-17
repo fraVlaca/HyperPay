@@ -1,5 +1,6 @@
 import { ChainConfig, ChainKey, UnifiedRegistry } from "@config/types";
 import Badge from "./Badge";
+import DirectionSwap from "./DirectionSwap";
 
 type Selection = {
   token: string;
@@ -25,12 +26,24 @@ export default function BridgeSelector({
   canAddSource,
   onAddSource
 }: Props) {
-  const tokens = registry.tokens.map((t) => t.symbol);
   const chains = registry.chains;
+  const pyusdSymbol =
+    registry.tokens.find((t) => t.symbol.toLowerCase() === "pyusd")?.symbol || "PYUSD";
 
   function update(partial: Partial<Selection>) {
     onChange({ ...selection, ...partial });
   }
+
+  function swap() {
+    if (!selection.origin || !selection.destination) return;
+    onChange({
+      ...selection,
+      origin: selection.destination,
+      destination: selection.origin
+    });
+  }
+
+  const toOptions = chains.map((c) => c.key).filter((k) => k !== selection.origin);
 
   return (
     <div className="space-y-4">
@@ -39,12 +52,12 @@ export default function BridgeSelector({
         <Badge text={bridgeBadge.text} tone={bridgeBadge.tone} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-3">
         <Select
           label="Token"
-          value={selection.token}
-          onChange={(v) => update({ token: v })}
-          options={tokens}
+          value={pyusdSymbol}
+          onChange={() => update({ token: pyusdSymbol })}
+          options={[pyusdSymbol]}
         />
         <Select
           label="From"
@@ -57,16 +70,20 @@ export default function BridgeSelector({
           label="To"
           value={selection.destination}
           onChange={(v) => update({ destination: v as ChainKey })}
-          options={chains.map((c) => c.key)}
+          options={toOptions}
           renderOption={(k) => chainName(chains, k as ChainKey)}
         />
+      </div>
+
+      <div className="flex justify-center">
+        <DirectionSwap onSwap={swap} disabled={!selection.origin || !selection.destination} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3">
         <div>
           <label className="text-sm text-gray-600">Amount</label>
           <input
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-900"
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-600"
             placeholder="0.0"
             value={selection.amount}
             onChange={(e) => update({ amount: e.target.value })}
@@ -78,7 +95,7 @@ export default function BridgeSelector({
         <div className="pt-2">
           <button
             onClick={onAddSource}
-            className="rounded-md bg-gray-900 px-3 py-2 text-sm text-white"
+            className="rounded-md bg-brand-700 px-3 py-2 text-sm text-white hover:bg-brand-800"
           >
             Add another source
           </button>
@@ -105,7 +122,7 @@ function Select({
     <div>
       <label className="text-sm text-gray-600">{label}</label>
       <select
-        className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-900"
+        className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-600"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >

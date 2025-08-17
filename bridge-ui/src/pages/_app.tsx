@@ -24,12 +24,15 @@ const wagmiConfig = getDefaultConfig({
 
 const queryClient = new QueryClient();
 
+import Header from "@components/Header";
+
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
           <>
+            <Header />
             <Component {...pageProps} />
             <ToastContainer position="top-right" />
           </>
