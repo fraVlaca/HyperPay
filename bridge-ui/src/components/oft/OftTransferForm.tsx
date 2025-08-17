@@ -202,9 +202,9 @@ export default function OftTransferForm({
           }
           }}
         >
-          Submit normal transfer
+          Submit standard transfer
         </button>
-        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[3px]">
+        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[-15px]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-80"><path d="M12 8v5l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2"/></svg>
           <span>3m</span>
         </div>
@@ -274,7 +274,7 @@ export default function OftTransferForm({
         >
           Submit Fast Transfer
         </button>
-        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[3px]">
+        <div className="inline-flex items-center gap-1 text-[11px] text-gray-600 leading-none relative top-[-15px]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-80"><path d="M12 8v5l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2"/></svg>
           <span>20s</span>
         </div>
