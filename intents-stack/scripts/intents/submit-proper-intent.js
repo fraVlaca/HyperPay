@@ -4,7 +4,7 @@ const { ethers } = require('ethers');
 
 // Configuration (Mainnet -> Arbitrum One)
 // You can override RPCs/PK via env: USER_PK, MAINNET_RPC, ARB_RPC
-const USER_PRIVATE_KEY = process.env.USER_PK || '0xe31b8d349b5c2f249d37f8a4d2b1fc4892ff159ac11ea62c66fb18ca4a298d38';
+const USER_PRIVATE_KEY = process.env.USER_PK;
 
 const CHAINS = {
   mainnet: {
