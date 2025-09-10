@@ -9,8 +9,8 @@ Overview
 - No blockchain network orchestration. You must provide RPC endpoints.
 
 Upstream reuse (no forks, updatable via args)
-- Contracts: LZeroAnalytics/oif-contracts
-- Solver: LZeroAnalytics/oif-solvers
+- Contracts: 0xBloctopus/oif-contracts
+- Solver: 0xBloctopus/oif-solvers
 - API Specs: openintentsframework/oif-specs
 
 Defaults
