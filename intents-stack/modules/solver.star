@@ -8,7 +8,7 @@ DEFAULT_SOLVER_IMAGE = "ghcr.io/openintentsframework/oif-solvers:latest"
 DEFAULT_BUILD_IMAGE = "rust:1.79-bullseye"
 DEFAULT_SOLVER_PORT = 3000
 DEFAULT_GIT_REF = "main"
-SOLVER_REPO_URL = "https://github.com/LZeroAnalytics/oif-solvers.git"
+SOLVER_REPO_URL = "https://github.com/0xBloctopus/oif-solvers.git"
 
 # Configuration section headers for better readability
 SECTION_HEADERS = {

@@ -8,7 +8,7 @@ DEFAULT_CONTRACTS_IMAGE = "ghcr.io/openintentsframework/oif-contracts:latest"
 DEFAULT_BUILD_IMAGE = "ubuntu:22.04"
 DEFAULT_GIT_REF = "main"
 DEFAULT_DEPLOYMENT_FLAVOR = "escrow"
-CONTRACTS_REPO_URL = "https://github.com/LZeroAnalytics/oif-contracts.git"
+CONTRACTS_REPO_URL = "https://github.com/0xBloctopus/oif-contracts.git"
 
 def deploy_or_import(plan, args):
     """
